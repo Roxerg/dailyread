@@ -4,6 +4,10 @@ import db_client
 
 app = Flask(__name__)
 
+@app.route("/")
+async def ping():
+    return "pong"
+
 @app.route("/mark")
 async def mark_today_read():
     if request.json == None:
