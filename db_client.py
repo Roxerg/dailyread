@@ -4,11 +4,6 @@ import bcrypt
 
 import os
 DB_URI = os.environ['READSTATS_DATABASE_URI']
-USER = os.environ['READSTATS_DATABASE_USER'] 
-PASSWORD = os.environ['READSTATS_DATABASE_PASSWORD']
-HOST = os.environ['READSTATS_DATABASE_HOST']
-DATABASE = os.environ['READSTATS_DATABASE_NAME']
-PORT = os.environ['READSTATS_DATABASE_PORT']
 USERNAME = os.environ['READSTATS_USER']
 PASSWORD = os.environ['READSTATS_PASS']
 
