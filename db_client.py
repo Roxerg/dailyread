@@ -117,6 +117,6 @@ async def userhistory(username):
     return res
 
 
-    
+
 
 asyncio.run(init_db())
