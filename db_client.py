@@ -12,6 +12,8 @@ async def get_connection():
 
 async def init_db():
 
+    
+
     conn = await get_connection()
 
     await conn.execute(
