@@ -1,12 +1,12 @@
 from flask import Flask
 from flask import request
 
-from flask_cors import CORS, cross_origin
+from flask_cors import CORS
 
 import db_client
 
 app = Flask(__name__)
-cors = CORS(app)
+CORS(app)
 app.config['CORS_HEADERS'] = 'Content-Type'
 
 @app.route("/")
@@ -14,7 +14,6 @@ async def ping():
     return "pong"
 
 @app.route("/mark")
-@cross_origin()
 async def mark_today_read():
     if request.json == None:
         return "body must contain login (user, pass)"
@@ -32,7 +31,6 @@ async def mark_today_read():
     return "failed"
 
 @app.route("/today")
-@cross_origin()
 async def get_today_status():
     username = request.args.get('user')
     if username == None:
@@ -42,7 +40,6 @@ async def get_today_status():
     return str(streak)
 
 @app.route("/today/verbose")
-@cross_origin()
 async def get_today_status_verbose():
     username = request.args.get('user')
     if username == None:
@@ -61,7 +58,6 @@ async def get_today_status_verbose():
         }
 
 @app.route("/leaderboard")
-@cross_origin()
 async def get_leaderboard():
     limit_req = request.args.get('limit')
     limit = 5

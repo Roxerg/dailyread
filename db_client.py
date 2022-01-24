@@ -102,10 +102,6 @@ async def leaderboard(limit):
     conn = await get_connection()
 
     res = await conn.fetch("SELECT username, MAX(streak) as topstreak FROM users JOIN history ON user_id=id GROUP BY username ORDER BY topstreak DESC LIMIT $1", limit)
-    
-    print("AAAAAAAAAAAAAA")
-    print(res)
-    print("AAAAAAAAAAAAAA")
 
     res = [{"rank": i+1, "user" : x['username'], "streak": x['topstreak']} for i,x in enumerate(res)]
     await conn.close()
@@ -115,7 +111,6 @@ async def userhistory(username):
 
     conn = await get_connection()
     res = await conn.fetch("SELECT * FROM history JOIN users ON user_id=id WHERE username=$1", username)
-    print(res)
     return res
 
 
