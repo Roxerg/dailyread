@@ -3,7 +3,7 @@ import asyncio
 import bcrypt
 
 import os
-DB_URI = os.environ['READSTATS_DATABASE_URI']
+DB_URI = os.environ['DATABASE_URL']
 USERNAME = os.environ['READSTATS_USER']
 PASSWORD = os.environ['READSTATS_PASS']
 
