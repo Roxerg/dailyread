@@ -1,0 +1,127 @@
+import asyncpg
+import asyncio
+import bcrypt
+
+import os
+DB_URI = os.environ['READSTATS_DATABASE_URI']
+USER = os.environ['READSTATS_DATABASE_USER'] 
+PASSWORD = os.environ['READSTATS_DATABASE_PASSWORD']
+HOST = os.environ['READSTATS_DATABASE_HOST']
+DATABASE = os.environ['READSTATS_DATABASE_NAME']
+PORT = os.environ['READSTATS_DATABASE_PORT']
+USERNAME = os.environ['READSTATS_USER']
+PASSWORD = os.environ['READSTATS_PASS']
+
+async def get_connection():
+    return await asyncpg.connect(dsn=DB_URI)        
+
+async def init_db():
+
+    conn = await get_connection()
+
+    await conn.execute(
+        '''
+        CREATE TABLE IF NOT EXISTS users(
+            id SERIAL PRIMARY KEY,
+            username VARCHAR NOT NULL UNIQUE,
+            passwordHash VARCHAR NOT NULL
+        );
+        '''
+    )
+    await conn.execute(
+        '''
+        CREATE TABLE IF NOT EXISTS history(
+            day DATE DEFAULT CURRENT_DATE,
+            streak INT,
+            user_id INT REFERENCES users (id),
+            PRIMARY KEY (day, user_id)
+        );
+        '''
+    ) 
+
+    username = USERNAME
+
+    salt = bcrypt.gensalt()
+    passwordHash = bcrypt.hashpw(str.encode(PASSWORD), salt)
+
+    
+    await conn.execute("INSERT INTO users (username, passwordHash) VALUES ($1, $2) ON CONFLICT DO NOTHING;", username, passwordHash.decode())
+    await conn.close()
+
+
+async def mark_today(username):
+    conn = await get_connection()
+
+    streak = 0
+    user_id = None
+    streak_res = await conn.fetch("SELECT streak, user_id FROM history JOIN users ON user_id=id WHERE username=$1 AND day=CURRENT_DATE-1;", username)
+    
+    if len(streak_res) > 0:
+        streak = streak_res[0]['streak']
+        user_id = streak_res[0]['user_id']
+    else:
+        user_res = await conn.fetch("SELECT id FROM users WHERE username=$1", username)
+        user_id = user_res[0]['id']
+
+    await conn.execute("INSERT INTO history (day, streak, user_id) VALUES (CURRENT_DATE, $1, $2)", streak+1, user_id)
+    await conn.close()
+
+    return True
+    
+async def get_today(username):
+    conn = await get_connection()
+
+    res = await conn.fetch("SELECT streak FROM history JOIN users ON user_id=id WHERE username=$1 AND day=CURRENT_DATE", username)
+    if len(res) > 0:
+        return res[0]['streak']
+    else: 
+        return 0
+
+
+async def verify_login(username, password):
+    conn = await get_connection()
+    res = await conn.fetch("SELECT * FROM users WHERE username=$1", username)
+    if len(res) == 0:
+        return False
+    passwordHash = str.encode(res[0]['passwordhash'])
+
+    await conn.close()
+    return bcrypt.checkpw(str.encode(password), passwordHash)
+
+async def register(username, password):
+
+    conn = await get_connection()
+
+    salt = bcrypt.gensalt()
+    passwordHash = bcrypt.hashpw(str.encode(password), salt)
+
+    status = await conn.execute("INSERT INTO users (username, passwordHash) VALUES ($1, $2) ON CONFLICT DO NOTHING;", username, passwordHash.decode())
+    await conn.close()
+
+    return status
+
+async def leaderboard(limit):
+
+    conn = await get_connection()
+
+    res = await conn.fetch("SELECT username, MAX(streak) as topstreak FROM users JOIN history ON user_id=id GROUP BY username ORDER BY topstreak DESC LIMIT $1", limit)
+    
+    print("AAAAAAAAAAAAAA")
+    print(res)
+    print("AAAAAAAAAAAAAA")
+
+    res = [{"rank": i+1, "user" : x['username'], "streak": x['topstreak']} for i,x in enumerate(res)]
+    await conn.close()
+    return res
+
+async def userhistory(username):
+
+    conn = await get_connection()
+    res = await conn.fetch("SELECT * FROM history JOIN users ON user_id=id WHERE username=$1", username)
+    print(res)
+    return res
+
+
+    
+
+asyncio.run(init_db())
