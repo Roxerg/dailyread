@@ -13,7 +13,7 @@ app.config['CORS_HEADERS'] = 'Content-Type'
 async def ping():
     return "pong"
 
-@app.route("/mark")
+@app.route("/mark", methods=['GET', 'POST'])
 async def mark_today_read():
     if request.json == None:
         return "body must contain login (user, pass)"
@@ -30,7 +30,7 @@ async def mark_today_read():
             return "marked today"
     return "failed"
 
-@app.route("/mark-with-token")
+@app.route("/mark-with-token", methods=['GET', 'POST'])
 async def mark_today_read_token():
     auth_header = request.headers.get('Authorization')
 
@@ -46,7 +46,7 @@ async def mark_today_read_token():
     return "failed"
 
 
-@app.route("/today")
+@app.route("/today", methods=['GET'])
 async def get_today_status():
     username = request.args.get('user')
     if username == None:
@@ -55,7 +55,8 @@ async def get_today_status():
     streak = await db_client.get_today(username)
     return str(streak)
 
-@app.route("/today/verbose")
+
+@app.route("/today/verbose", methods=['GET'])
 async def get_today_status_verbose():
     username = request.args.get('user')
     if username == None:
@@ -73,7 +74,7 @@ async def get_today_status_verbose():
             "streak": streak
         }
 
-@app.route("/leaderboard")
+@app.route("/leaderboard", methods=['GET'])
 async def get_leaderboard():
     limit_req = request.args.get('limit')
     limit = 5
@@ -86,7 +87,7 @@ async def get_leaderboard():
     }
 
 
-@app.route("/history")
+@app.route("/history", methods=['GET'])
 async def get_history():
     username = request.args.get('user')
     if username == None:
@@ -95,20 +96,23 @@ async def get_history():
     streak = await db_client.userhistory(username)
     return str(streak)
 
-@app.route("/register")
+@app.route("/register", methods=['POST'])
 async def register():
     username = request.json['user']
     password = request.json['pass']
 
     return await db_client.register(username, password)
 
-@app.route("/login")
+@app.route("/login", methods=['GET', 'POST'])
 async def login():
     username = request.json['user']
     password = request.json['pass']
 
-    token = db_client.verify_login(username, password)
-    return token
+    token = await db_client.verify_login(username, password)
+    if token:
+        return token
+    else:
+        return
 
 if __name__ == '__main__':
     # Threaded option to enable multiple instances for multiple user access support

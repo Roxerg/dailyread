@@ -104,9 +104,9 @@ async def verify_login(username, password):
         await conn.close()
         return None
     
-    token = ''.join(random.SystemRandom().choice(tring.ascii_letters + string.digits + string.punctuation) for _ in range(32))
+    token = ''.join(random.SystemRandom().choice(string.ascii_letters + string.digits) for _ in range(32))
 
-    await write_token(conn, user_id, token)
+    await write_token(conn, user["id"], token)
 
     await conn.close()
     return token
