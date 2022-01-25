@@ -30,6 +30,22 @@ async def mark_today_read():
             return "marked today"
     return "failed"
 
+@app.route("/mark-with-token")
+async def mark_today_read_token():
+    auth_header = request.headers.get('Authorization')
+
+    if not auth_header:
+        return "failed"
+
+    auth_token = auth_header.split(" ")[1]
+
+    if auth_token:
+        user_data = db_client.verify_token(auth_token)
+        if await db_client.mark_today(user_data["username"]):
+            return "marked today"
+    return "failed"
+
+
 @app.route("/today")
 async def get_today_status():
     username = request.args.get('user')
@@ -69,12 +85,6 @@ async def get_leaderboard():
         "leaderboard": toplist
     }
 
-@app.route("/register")
-async def register():
-    username = request.json['user']
-    password = request.json['pass']
-
-    return await db_client.register(username, password)
 
 @app.route("/history")
 async def get_history():
@@ -84,6 +94,21 @@ async def get_history():
 
     streak = await db_client.userhistory(username)
     return str(streak)
+
+@app.route("/register")
+async def register():
+    username = request.json['user']
+    password = request.json['pass']
+
+    return await db_client.register(username, password)
+
+@app.route("/login")
+async def login():
+    username = request.json['user']
+    password = request.json['pass']
+
+    token = db_client.verify_login(username, password)
+    return token
 
 if __name__ == '__main__':
     # Threaded option to enable multiple instances for multiple user access support

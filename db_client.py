@@ -2,6 +2,9 @@ import asyncpg
 import asyncio
 import bcrypt
 
+import string
+import random
+
 import os
 DB_URI = os.environ['DATABASE_URL']
 USERNAME = os.environ['READSTATS_USER']
@@ -25,6 +28,18 @@ async def init_db():
         );
         '''
     )
+
+    await conn.execute(
+        '''
+        CREATE TABLE IF NOT EXISTS sessions(
+            user_id INT,
+            token VARCHAR,
+            timestamp DATETIME 
+            PRIMARY KEY (user_id, token)
+        )
+        '''
+    )
+
     await conn.execute(
         '''
         CREATE TABLE IF NOT EXISTS history(
@@ -80,10 +95,43 @@ async def verify_login(username, password):
     res = await conn.fetch("SELECT * FROM users WHERE username=$1", username)
     if len(res) == 0:
         return False
-    passwordHash = str.encode(res[0]['passwordhash'])
+    user = res[0]
+    passwordHash = str.encode(user['passwordhash'])
+
+    # ok fine i'll do the bloody token. but lazily.
+
+    if not bcrypt.checkpw(str.encode(password), passwordHash):
+        await conn.close()
+        return None
+    
+    token = ''.join(random.SystemRandom().choice(tring.ascii_letters + string.digits + string.punctuation) for _ in range(32))
+
+    await write_token(conn, user_id, token)
 
     await conn.close()
-    return bcrypt.checkpw(str.encode(password), passwordHash)
+    return token
+
+async def clean_tokens(conn):
+    await conn.execute('DELETE FROM sessions WHERE CURRENT_DATE - timestamp::date > 30;')
+
+async def write_token(conn, user_id, token):
+    await clean_tokens(conn)
+    await conn.execute('INSERT INTO sessions (user_id, token, timestamp) VALUES ($1, $2, NOW())', user_id, token)
+
+async def verify_token(token):
+
+    conn = await get_connection()
+    
+    await clean_tokens(conn)
+    res = await conn.fetch('SELECT username, user_id FROM sessions JOIN users ON user_id=id WHERE token=$1')
+    await conn.close()
+    if len(res) > 0:
+        return {
+            "username" : res["username"],
+            "user_id" : res["user_id"]
+        }
+    else:
+        return None
 
 async def register(username, password):
 
