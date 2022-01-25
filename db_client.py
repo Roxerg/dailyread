@@ -34,7 +34,7 @@ async def init_db():
         CREATE TABLE IF NOT EXISTS sessions(
             user_id INT,
             token VARCHAR,
-            timestamp DATETIME 
+            timestamp TIMESTAMP,
             PRIMARY KEY (user_id, token)
         )
         '''
