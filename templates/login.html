@@ -1,0 +1,88 @@
+<html>
+    
+<head>
+    <meta content="text/html;charset=utf-8" http-equiv="Content-Type">
+    <meta content="utf-8" http-equiv="encoding">    
+</head>
+
+
+<body>
+    <iframe name="dummyframe" id="dummyframe" style="display: none;"></iframe>
+    <form id="login" target="dummyframe">  
+        <div class="container">   
+            <label>Username : </label>   
+            <input id="username" type="text" placeholder="Enter Username" name="username" required>  
+            <label>Password : </label>   
+            <input id="password" type="password" placeholder="Enter Password" name="password" required>  
+            <button type="submit">Login</button>   
+            <input type="checkbox" checked="checked" onclick="remember()"> Remember me   
+            <br>
+            <span style="color:red" id="loginerror"></span>
+        </div>   
+    </form>     
+</body>
+
+
+
+
+
+<script>
+    let rememberMe = true
+    let mainPage = "/home"
+    // Get data
+    let token = localStorage.getItem('readertoken');
+
+    if (token) {
+        window.location.replace(mainPage);
+    } else {
+        token = sessionStorage.getItem('readertoken');
+        if(token) {
+            window.location.replace(mainPage);
+        }
+    }
+
+    function remember() {
+        rememberMe = !rememberMe
+    }
+    
+    function submit() {
+
+        document.getElementById("loginerror").innerText = ''
+
+        const user = document.getElementById('username').value
+        const pass = document.getElementById('password').value
+
+
+        const creds = { "user" : user, "pass" : pass }
+        // https://read-daily.herokuapp.com/login
+
+        fetch("https://read-daily.herokuapp.com/login",  {
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(creds),
+            method: 'POST',
+            mode: 'cors',
+            }).then((response) => {
+            if (response.ok) {
+                response.text().then(function(text) {
+                    if (text.length >= 16 && rememberMe) {
+                        console.log('saving', text, user, rememberMe)
+                        localStorage.setItem('remember', rememberMe)
+
+                        localStorage.setItem('readertoken', text);
+                        localStorage.setItem('readeruser', user);
+                        
+                        window.location.replace(mainPage);
+                    }
+                }).catch((e) => console.log("didnt get text", e));
+            } else {
+                document.getElementById("loginerror").innerText = "incorrect credentials"
+            }
+            }).catch((e) => console.log("error", e));
+    }
+
+    document.getElementById('login').onsubmit = submit;
+    // https://vanillajstoolkit.com/reference/browser-storage/localstorage/
+</script>
+</html>

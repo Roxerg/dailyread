@@ -1,0 +1,55 @@
+<html>
+
+<head>
+    <meta content="text/html;charset=utf-8" http-equiv="Content-Type">
+    <meta content="utf-8" http-equiv="encoding">  
+</head>
+
+
+<body>
+
+    <div id="streak">111</div>
+</body>
+
+<script>
+        let token = localStorage.getItem('readertoken');
+        let user  = localStorage.getItem('readeruser');
+        const remember = localStorage.getItem('remember');
+        console.log(remember, token, user)
+        if (!remember) {
+            sessionStorage.setItem('readertoken', token);
+            sessionStorage.setItem('readeruser', user);
+
+            localStorage.removeItem('readertoken');
+            localStorage.removeItem('readeruser');
+            localStorage.removeItem('remember');
+        }
+
+        if (!token) {
+            window.location.replace("/");
+        }
+        
+        function get_streak() {
+
+            fetch(`https://read-daily.herokuapp.com/today?user=${user}`,  {
+            headers: {
+                'Authorization' : 'Bearer ' + token
+            },
+            method: 'GET',
+            mode: 'cors',
+            }).then((response) => {
+            if (response.ok) {
+                response.text().then((txt) => {
+                    document.getElementById("streak").innerText = txt
+                })
+            } else {
+                document.getElementById("streak").innerText = -1
+            }
+            }).catch((e) => console.log("error", e));
+        }
+
+        get_streak()
+        
+</script>
+
+</html>

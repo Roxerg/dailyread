@@ -1,5 +1,7 @@
 from flask import Flask
 from flask import request
+from flask import render_template
+
 
 from flask_cors import CORS
 
@@ -9,9 +11,6 @@ app = Flask(__name__)
 CORS(app)
 app.config['CORS_HEADERS'] = 'Content-Type'
 
-@app.route("/")
-async def ping():
-    return "pong"
 
 @app.route("/mark", methods=['GET', 'POST'])
 async def mark_today_read():
@@ -114,6 +113,29 @@ async def login():
     else:
         return
 
+
+@app.route("/", methods=['GET'])
+async def login_page():
+    auth_header = request.headers.get('Authorization')
+
+    if not auth_header:
+        return render_template("login.html")
+
+    auth_token = auth_header.split(" ")[1]
+
+    if auth_token:
+        user_data = db_client.verify_token(auth_token)
+        if user_data["username"]:
+            return render_template("home.html")
+        else: 
+            return render_template("login.html")
+
+@app.route("/home", methods=['GET'])
+async def home_page():
+    return render_template("home.html")
+
+
 if __name__ == '__main__':
     # Threaded option to enable multiple instances for multiple user access support
     app.run(threaded=True, port=5000)
+
