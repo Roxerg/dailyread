@@ -69,7 +69,6 @@ async def get_today_status_verbose():
         return "need to specify user"
 
     res = await db_client.get_today(username)
-    print(res)
     if res == None: 
         return {
             "today": False,
