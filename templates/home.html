@@ -48,6 +48,7 @@
 <script>
         
         const baseUrl = "{{ api_url }}"
+        console.log(baseUrl)
 
         let token = localStorage.getItem('readertoken');
         let user  = localStorage.getItem('readeruser');
@@ -82,6 +83,7 @@
                     document.getElementById("streak").innerText = res['streak']
                     const button = document.getElementById("button")
                     const disabled = (res['today'])
+                    console.log(res)
                     if (disabled) {
                         button.disabled = disabled
                         button.classList.toggle('button-active')

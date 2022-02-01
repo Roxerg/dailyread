@@ -90,7 +90,7 @@ async def get_today(username):
     if len(res) > 0:
         return {
             "streak": res[0]['streak'],
-            "today" : datetime.today().strftime('%Y-%m-%d') == res[0]['day'],
+            "today" : datetime.today().strftime('%Y-%m-%d') == res[0]['day'].strftime('%Y-%m-%d'),
         }
     else: 
         return None
