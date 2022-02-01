@@ -81,8 +81,7 @@
                 response.json().then((res) => {
                     document.getElementById("streak").innerText = res['streak']
                     const button = document.getElementById("button")
-                    const disabled = !(res['today'] === "true")
-                    console.log("res", res, "today", res["today"], "res eval", (res['today'] === "true"))
+                    const disabled = !(res['today'])
                     if (disabled) {
                         button.disabled = disabled
                         button.classList.toggle('button-active')
