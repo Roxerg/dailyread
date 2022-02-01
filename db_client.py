@@ -85,7 +85,7 @@ async def mark_today(username):
 async def get_today(username):
     conn = await get_connection()
 
-    res = await conn.fetch("SELECT streak, day FROM history JOIN users ON user_id=id WHERE username=$1 AND day >= CURRENT_DATE - INTEGER '1' ORDER BY day ASC", username)
+    res = await conn.fetch("SELECT streak, day FROM history JOIN users ON user_id=id WHERE username=$1 AND day >= CURRENT_DATE - INTEGER '1' ORDER BY day DESC", username)
 
     if len(res) > 0:
         return {
