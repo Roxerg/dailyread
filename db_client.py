@@ -5,6 +5,8 @@ import bcrypt
 import string
 import random
 
+from datetime import datetime
+
 import os
 DB_URI = os.environ['DATABASE_URL']
 USERNAME = os.environ['READSTATS_USER']
@@ -83,11 +85,15 @@ async def mark_today(username):
 async def get_today(username):
     conn = await get_connection()
 
-    res = await conn.fetch("SELECT streak FROM history JOIN users ON user_id=id WHERE username=$1 AND day=CURRENT_DATE", username)
+    res = await conn.fetch("SELECT streak, day FROM history JOIN users ON user_id=id WHERE username=$1 AND day >= CURRENT_DATE - INTEGER '1' ORDER BY day ASC", username)
+
     if len(res) > 0:
-        return res[0]['streak']
+        return {
+            "streak": res[0]['streak'],
+            "today" : datetime.today().strftime('%Y-%m-%d') == res[0]['day'],
+        }
     else: 
-        return 0
+        return None
 
 
 async def verify_login(username, password):
@@ -123,12 +129,12 @@ async def verify_token(token):
     conn = await get_connection()
     
     await clean_tokens(conn)
-    res = await conn.fetch('SELECT username, user_id FROM sessions JOIN users ON user_id=id WHERE token=$1')
+    res = await conn.fetch('SELECT username, user_id FROM sessions JOIN users ON user_id=id WHERE token=$1', token)
     await conn.close()
     if len(res) > 0:
         return {
-            "username" : res["username"],
-            "user_id" : res["user_id"]
+            "username" : res[0]["username"],
+            "user_id" : res[0]["user_id"]
         }
     else:
         return None

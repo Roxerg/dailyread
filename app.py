@@ -39,7 +39,7 @@ async def mark_today_read_token():
     auth_token = auth_header.split(" ")[1]
 
     if auth_token:
-        user_data = db_client.verify_token(auth_token)
+        user_data = await db_client.verify_token(auth_token)
         if await db_client.mark_today(user_data["username"]):
             return "marked today"
     return "failed"
@@ -51,8 +51,8 @@ async def get_today_status():
     if username == None:
         return "need to specify user"
 
-    streak = await db_client.get_today(username)
-    return str(streak)
+    res = await db_client.get_today(username)
+    return str(res["streak"])
 
 
 @app.route("/today/verbose", methods=['GET'])
@@ -61,16 +61,16 @@ async def get_today_status_verbose():
     if username == None:
         return "need to specify user"
 
-    streak = await db_client.get_today(username)
-    if streak == 0: 
+    res = await db_client.get_today(username)
+    if res == None: 
         return {
             "today": False,
-            "streak": streak
+            "streak": 0,
         } 
     else:
         return {
-            "today": True,
-            "streak": streak
+            "today": res['today'],
+            "streak": res['streak'],
         }
 
 @app.route("/leaderboard", methods=['GET'])
@@ -95,7 +95,7 @@ async def get_history():
     streak = await db_client.userhistory(username)
     return str(streak)
 
-@app.route("/register", methods=['POST'])
+@app.route("/api/register", methods=['POST'])
 async def register():
     username = request.json['user']
     password = request.json['pass']
@@ -124,11 +124,16 @@ async def login_page():
     auth_token = auth_header.split(" ")[1]
 
     if auth_token:
-        user_data = db_client.verify_token(auth_token)
+        user_data = await db_client.verify_token(auth_token)
         if user_data["username"]:
             return render_template("home.html")
         else: 
             return render_template("login.html")
+
+@app.route("/register", methods=['GET'])
+async def register_page():
+    return render_template("register.html")
+        
 
 @app.route("/home", methods=['GET'])
 async def home_page():

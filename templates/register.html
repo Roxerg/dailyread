@@ -17,14 +17,11 @@
                         <input class="padded" id="password" type="password" placeholder="pass" name="password" required>  
                         
                         <br>
-                        <button class="padded" type="submit">login</button>   
-                        <br>
+                        <button class="padded" type="submit">register</button>   
 
-                        <input class="padded" type="checkbox" checked="checked" onclick="remember()"> remember me   
                         <br>
                         <span style="color:red" id="loginerror"></span>
                         <br>
-                        <span><a href="/register">Register</a></span>
                 </form>
             </div>
         </div>
@@ -36,14 +33,13 @@
 
 
 <script>
+    // const baseUrl = "https://read-daily.herokuapp.com"
+    const baseUrl = "http://127.0.0.1:5000"
+
     let rememberMe = true
     let mainPage = "/home"
     // Get data
     let token = localStorage.getItem('readertoken');
-
-    // const baseUrl = "https://read-daily.herokuapp.com"
-    const baseUrl = "http://127.0.0.1:5000"
-    
 
     if (token) {
         window.location.replace(mainPage);
@@ -54,10 +50,6 @@
         }
     }
 
-    function remember() {
-        rememberMe = !rememberMe
-    }
-    
     function submit() {
 
         document.getElementById("loginerror").innerText = ''
@@ -69,7 +61,7 @@
         const creds = { "user" : user, "pass" : pass }
         // https://read-daily.herokuapp.com/login
 
-        fetch(`${baseUrl}/login`,  {
+        fetch(`${baseUrl}/register`,  {
             headers: {
                 'Content-Type': 'application/json'
             },
@@ -79,18 +71,10 @@
             }).then((response) => {
             if (response.ok) {
                 response.text().then(function(text) {
-                    if (text.length >= 16 && rememberMe) {
-                        console.log('saving', text, user, rememberMe)
-                        localStorage.setItem('remember', rememberMe)
-
-                        localStorage.setItem('readertoken', text);
-                        localStorage.setItem('readeruser', user);
-                        
-                        window.location.replace(mainPage);
-                    }
+                    window.location.replace("/");
                 }).catch((e) => console.log("didnt get text", e));
             } else {
-                document.getElementById("loginerror").innerText = "incorrect credentials"
+                document.getElementById("loginerror").innerText = "existing username"
             }
             }).catch((e) => console.log("error", e));
     }
