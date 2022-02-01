@@ -1,3 +1,5 @@
+import os
+
 from flask import Flask
 from flask import request
 from flask import render_template
@@ -7,12 +9,17 @@ from flask_cors import CORS
 
 import db_client
 
+API_URL = os.environ['API_URL']
+
 app = Flask(__name__)
 CORS(app)
 app.config['CORS_HEADERS'] = 'Content-Type'
 
 
-@app.route("/mark", methods=['GET', 'POST'])
+# API ROUTES
+
+
+@app.route("/api/mark", methods=['GET', 'POST'])
 async def mark_today_read():
     if request.json == None:
         return "body must contain login (user, pass)"
@@ -29,7 +36,7 @@ async def mark_today_read():
             return "marked today"
     return "failed"
 
-@app.route("/mark-with-token", methods=['GET', 'POST'])
+@app.route("/api/mark-with-token", methods=['GET', 'POST'])
 async def mark_today_read_token():
     auth_header = request.headers.get('Authorization')
 
@@ -45,7 +52,7 @@ async def mark_today_read_token():
     return "failed"
 
 
-@app.route("/today", methods=['GET'])
+@app.route("/api/today", methods=['GET'])
 async def get_today_status():
     username = request.args.get('user')
     if username == None:
@@ -55,13 +62,14 @@ async def get_today_status():
     return str(res["streak"])
 
 
-@app.route("/today/verbose", methods=['GET'])
+@app.route("/api/today/verbose", methods=['GET'])
 async def get_today_status_verbose():
     username = request.args.get('user')
     if username == None:
         return "need to specify user"
 
     res = await db_client.get_today(username)
+    print(res)
     if res == None: 
         return {
             "today": False,
@@ -73,7 +81,7 @@ async def get_today_status_verbose():
             "streak": res['streak'],
         }
 
-@app.route("/leaderboard", methods=['GET'])
+@app.route("/api/leaderboard", methods=['GET'])
 async def get_leaderboard():
     limit_req = request.args.get('limit')
     limit = 5
@@ -86,7 +94,7 @@ async def get_leaderboard():
     }
 
 
-@app.route("/history", methods=['GET'])
+@app.route("/api/history", methods=['GET'])
 async def get_history():
     username = request.args.get('user')
     if username == None:
@@ -102,7 +110,7 @@ async def register():
 
     return await db_client.register(username, password)
 
-@app.route("/login", methods=['GET', 'POST'])
+@app.route("/api/login", methods=['GET', 'POST'])
 async def login():
     username = request.json['user']
     password = request.json['pass']
@@ -114,30 +122,34 @@ async def login():
         return
 
 
+
+
+# TEMPLATE ROUTES
+
 @app.route("/", methods=['GET'])
 async def login_page():
     auth_header = request.headers.get('Authorization')
 
     if not auth_header:
-        return render_template("login.html")
+        return render_template("login.html", api_url=API_URL)
 
     auth_token = auth_header.split(" ")[1]
 
     if auth_token:
         user_data = await db_client.verify_token(auth_token)
         if user_data["username"]:
-            return render_template("home.html")
+            return render_template("home.html", api_url=API_URL)
         else: 
-            return render_template("login.html")
+            return render_template("login.html", api_url=API_URL)
 
 @app.route("/register", methods=['GET'])
 async def register_page():
-    return render_template("register.html")
+    return render_template("register.html", api_url=API_URL)
         
 
 @app.route("/home", methods=['GET'])
 async def home_page():
-    return render_template("home.html")
+    return render_template("home.html", api_url=API_URL)
 
 
 if __name__ == '__main__':

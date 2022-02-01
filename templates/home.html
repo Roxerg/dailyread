@@ -46,8 +46,8 @@
 </body>
 
 <script>
-        const baseUrl = "https://read-daily.herokuapp.com"
-        // const baseUrl = "http://127.0.0.1:5000"
+        
+        const baseUrl = "{{ api_url }}"
 
         let token = localStorage.getItem('readertoken');
         let user  = localStorage.getItem('readeruser');
@@ -81,7 +81,7 @@
                 response.json().then((res) => {
                     document.getElementById("streak").innerText = res['streak']
                     const button = document.getElementById("button")
-                    const disabled = !(res['today'])
+                    const disabled = (res['today'])
                     if (disabled) {
                         button.disabled = disabled
                         button.classList.toggle('button-active')
