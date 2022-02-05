@@ -110,6 +110,8 @@
             if (response.ok) {
                 response.text().then((txt) => {
                     console.log("marked")
+                    button.classList.toggle('button-active')
+                    button.classList.toggle('button-marked')
                 })
             } else {
                 document.getElementById("streak").innerText = -1
