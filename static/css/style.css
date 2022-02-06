@@ -1,0 +1,76 @@
+@font-face {
+    font-family: 'Nunito';
+    src: url(../fonts/Nunito-VariableFont.ttf);
+}
+
+body {
+    font-family: Nunito, Verdana, Geneva, Tahoma, sans-serif;
+    background: #1b1b1b;
+    color: #ffffff;
+    overflow-y: hidden;
+}
+
+.container {
+    display: grid;
+    justify-content: center;
+    /* grid-template-columns: [lefty] auto [midx] 40vw [righty] auto; */
+    /* grid-template-rows: [topy] 10vh [midy] 80vh [bottomy] 10vh; */
+}
+
+.item {
+    /* grid-column: midx; */
+    /* grid-row: midy; */
+    text-align: center;
+}
+
+
+/* DAILY BUTTON */
+
+.main-button {
+    border-radius: 20vh;
+    border-width: 20px;
+    width: 30vh;
+    height: 30vh;
+    font-size: 10vh;
+    border-style:solid;
+    transition: all 0.5s;
+}
+
+.main-button-active {
+    background-color:#2196f3;
+    border-color: #6db4ee;
+}
+
+.main-button-active:hover {
+    background-color:#107ad1;
+    border-color: #8cc5f3;
+    border-width: 30px;
+    font-size: 12vh;
+}
+
+.main-button-marked {
+    background-color:#005005;
+    border-color: #2e7d32;
+    border-width: 10px;
+    font-size: 70px;
+}
+
+/* STREAK */
+
+.fyah {
+    display: inline-block;
+    animation: flames 0.5s;
+    animation-iteration-count: infinite;
+    animation-timing-function: linear;
+}
+.hidden {
+    visibility: hidden;
+}
+
+@keyframes flames {
+    0% { opacity: 0.75; transform: rotate(-25deg);scale: 1;}
+    25% { opacity: 1; transform: rotate(0deg);scale: 1.5;}
+    50% { opacity: 0.75; transform: rotate(25deg); scale: 1;}
+    75% { opacity: 1; transform: rotate(0deg);scale: 1.5;}
+    100% { opacity: 0.75; transform: rotate(-25deg); scale: 1;}
+}

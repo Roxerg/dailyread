@@ -3,6 +3,7 @@
 <head>
     <meta content="text/html;charset=utf-8" http-equiv="Content-Type">
     <meta content="utf-8" http-equiv="encoding">    
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 
 
@@ -16,6 +17,16 @@
                         <br>
                         <input class="padded" id="password" type="password" placeholder="pass" name="password" required>  
                         
+                        <br>
+                        <span class="blurb">
+                            This application is not super secure - <br>
+                            <b>DO NOT</b> use a password that is used elsewhere.
+                            <br>
+                            If you forgot your password you will need to contact the dev.
+                            <br>
+                            Only data being stored is your login info, and timestamps of your daily click.
+                            <br>
+                        </span>
                         <br>
                         <button class="padded" type="submit">register</button>   
 
@@ -82,11 +93,6 @@
 </script>
 
 <style>
-    body {
-        font-family: Verdana, Geneva, Tahoma, sans-serif;
-        background: #1b1b1b;
-        color: #ffffff;
-    }
     .container {
       display: grid;
       grid-template-columns: [lefty] 40% [midx] auto [righty] 40%;
@@ -103,6 +109,10 @@
     }
     .padded {
         margin-bottom: 10px;
+    }
+    .blurb {
+        color: grey;
+        font-size: 2vh;
     }
     input {
         background: #212121;

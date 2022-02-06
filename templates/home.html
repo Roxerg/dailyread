@@ -3,20 +3,31 @@
 <head>
     <meta content="text/html;charset=utf-8" http-equiv="Content-Type">
     <meta content="utf-8" http-equiv="encoding">  
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 
 
 <body>
-    <div style="text-align: right;"><span id="username">username loading</span> | <a href="/" onclick="logout()">logout</a></div>
     <div class="container">
+        <div style="width: 98vw;">
+            <div style="float: right;"><span id="username">username loading</span> | <a href="/" onclick="logout()">logout</a></div>
+            <div style="float: left;">
+                <span>
+                <a onclick="showAbout()"><b>? </b></a>
+                | 
+                <a href="">leaderboard</a>
+                | 
+                <a href="">API</a>
+                </span>
+            </div>
+        </div>
         <div class="item">
             <div class="streak">
                 <div class="fyah hidden">🔥</div><span> STREAK </span><div class="fyah hidden">🔥</div>
                 <div class="streak-number" id="streak">???</div>       
                 <br>
             </div>
-            
-            <div><button class="button-active" id="button" type="button" onclick="mark_today()">📚</button></div>
+            <div><button class="main-button main-button-active" id="button" type="button" onclick="mark_today()">📚</button></div>
             <br>
             <span id="until-text"></span><span id="demo"></span>
             <div class="selector">
@@ -44,7 +55,7 @@
 
         let token = localStorage.getItem('readertoken');
         let user  = localStorage.getItem('readeruser');
-        document.getElementById("username").innerText = "roxerg";
+        document.getElementById("username").innerText = user;
 
         let clickedToday = false 
         let count = 0
@@ -69,6 +80,12 @@
 
         if (!token) {
             window.location.replace("/");
+        }
+
+        function showAbout() {
+            alert(
+                "This application is used for tracking whether you have done { an activity } each day. Currently only one activity is supported. You can click the button once per day, the app will keep track of how many consecutive days you clicked the button. That's it. Made by: https://whois.rogu.rocks"
+            )
         }
         
         function get_streak() {
@@ -96,8 +113,8 @@
 
                     if (disabled) {
                         button.disabled = disabled
-                        button.classList.toggle('button-active')
-                        button.classList.toggle('button-marked')
+                        button.classList.toggle('main-button-active')
+                        button.classList.toggle('main-button-marked')
 
                         clickedToday = true
 
@@ -122,8 +139,8 @@
             if (response.ok) {
                 response.text().then((txt) => {
                     document.getElementById("streak").innerText = count + 1
-                    button.classList.toggle('button-active')
-                    button.classList.toggle('button-marked')
+                    button.classList.toggle('main-button-active')
+                    button.classList.toggle('main-button-marked')
                 })
             } else {
                 document.getElementById("streak").innerText = -1
@@ -173,52 +190,7 @@ let x = setInterval(function() {
 </script>
 
 <style>
-    body {
-        font-family: Verdana, Geneva, Tahoma, sans-serif;
-        background: #1b1b1b;
-        color: #ffffff;
-        overflow-y: hidden;
-    }
-    .container {
-      display: grid;
-      grid-template-columns: [lefty] 30% [midx] auto [righty] 30%;
-      grid-template-rows: [topy] 10vh [midy] 80vh [bottomy] 10vh;
-    }
-    .fyah {
-        display: inline-block;
-        animation: flames 3s;
-        animation-iteration-count: infinite;
-        animation-timing-function: ease-in-out;
-    }
-    .hidden {
-        visibility: hidden;
-    }
 
-    @keyframes flames {
-        0% { opacity: 0.75; transform: rotate(-25deg);scale: 1;}
-        25% { opacity: 1; transform: rotate(0deg);scale: 1.2;}
-        50% { opacity: 0.75; transform: rotate(25deg); scale: 1;}
-        75% { opacity: 1; transform: rotate(0deg);scale: 1.2;}
-        100% { opacity: 0.75; transform: rotate(-25deg); scale: 1;}
-    }
-
-    /* @-moz-keyframes flames {
-        0% { opacity: 0; transform: rotateZ(-90deg);}
-        50% { opacity: 1; transform: rotateZ(90deg);}
-        100% { opacity: 0; transform: rotateZ(-90deg);}
-    }
-
-    @-webkit-keyframes flames {
-        0% { opacity: 0; transform: rotateZ(-90deg);}
-        50% { opacity: 1; transform: rotateZ(90deg);}
-        100% { opacity: 0; transform: rotateZ(-90deg);}
-    } */
-
-    .item {
-        grid-column: midx;
-        grid-row: midy;
-        text-align: center;
-    }
     .boxerg {
         padding-top: 15px;
         padding-bottom: 15px;
@@ -227,33 +199,6 @@ let x = setInterval(function() {
         margin-bottom: 10px;
     }
 
-    button {
-        border-radius: 20vh;
-        border-width: 20px;
-        width: 30vh;
-        height: 30vh;
-        font-size: 10vh;
-        border-style:solid;
-        transition: all 0.5s;
-    }
-
-    .button-active {
-        background-color:#2196f3;
-        border-color: #6db4ee;
-    }
-    .button-active:hover {
-        background-color:#107ad1;
-        border-color: #8cc5f3;
-        border-width: 30px;
-        font-size: 12vh;
-    }
-
-    .button-marked {
-        background-color:#005005;
-        border-color: #2e7d32;
-        border-width: 10px;
-        font-size: 70px;
-    }
 
     .selector {
         opacity: 50%;
@@ -261,14 +206,14 @@ let x = setInterval(function() {
         color: gray;
     }
     .comingsoon {
-        font-size: 50px;
+        font-size: 5vw;
     }
     .unselected {
-        font-size: 40px;
+        font-size: 60%;
         opacity: 30%;
     }
     .selected {
-        font-size: 60px;
+        font-size: 90%;
     }
     .streak {
         font-size: 20px;
