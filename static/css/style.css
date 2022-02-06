@@ -172,6 +172,10 @@ button {
     margin-left: -200vh !important;
 }
 
+.leaderboard-you {
+    color: rgb(201, 201, 5);
+}
+
 
 /* CODEBLOCK */
 .codeblock {

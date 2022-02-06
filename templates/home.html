@@ -39,8 +39,8 @@
             --url <span class="codetext">'{{ api_url }}/mark'</span> \ <br>
             --header <span class="codetext">'Content-Type: application/json'</span> \ <br>
             --data <span class="codetext">'{ <br>
-	            "user": <span class="username codetextalt"></span>, <br>
-	            "pass": <span class="codetextalt">%your password%</span> <br>
+	            "user": "<span class="username codetextalt"></span>", <br>
+	            "pass": "<span class="codetextalt">%your password%</span>" <br>
             }' <br> </span>
         </div>
     </div>
@@ -58,7 +58,7 @@
                 </span>
             </div>
         </div>
-        <div class="item">
+        <div id="main-stuff" class="item">
             <div class="streak">
                 <div class="fyah hidden">🔥</div><span> STREAK </span><div class="fyah hidden">🔥</div>
                 <div class="streak-number" id="streak">???</div>       
@@ -160,6 +160,12 @@
             document.getElementById('dongle').classList.toggle("dongle-api")
         }
 
+        function hideAllSidebars() {
+            if (aboutVisible) showAbout()
+            if (leaderboardVisible) leaderboard()
+            if (apiVisible) showApi()
+        }
+
         function get_leaderboard() {
             fetch(`${baseUrl}/leaderboard`,  {
                 headers: {
@@ -175,7 +181,7 @@
 
                                 let topUser
                                 if (e.user === user) {
-                                    topUser = `<b>${e.user}</b>`
+                                    topUser = `<b class="leaderboard-you">${e.user}</b>`
                                 } else {
                                     topUser = e.user
                                 }
@@ -253,6 +259,10 @@
 
         get_streak()
         get_leaderboard()
+
+        document.getElementById("main-stuff").addEventListener("click", () => {
+            hideAllSidebars()
+        })
 
 
 
