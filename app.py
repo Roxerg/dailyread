@@ -107,7 +107,12 @@ async def get_history():
         return error_response("user not specified", status=400)
 
     streak = await db_client.userhistory(username)
-    return str(streak)
+    print(streak)
+    response = list(map(lambda x : {
+        "day": x["day"].strftime('%d-%m-%Y'),
+        "streak" : x["streak"],
+    }, streak))
+    return str(response)
 
 @app.route("/api/register", methods=['POST'])
 async def register():
