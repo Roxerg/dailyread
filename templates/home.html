@@ -7,6 +7,7 @@
 
 
 <body>
+    <div style="text-align: right;"><span id="username">username loading</span> | <a href="/" onclick="logout()">logout</a></div>
     <div class="container">
         <div class="item">
             <div class="streak">
@@ -32,14 +33,6 @@
                     <span class="unselected">🥗</span>
                     <span>></span>
                 </div>
-                <div>
-                    Leaderboard
-                    <div>
-                        1. test <br>
-                        2. guy <br>
-                        3. mate <br>
-                    </div>
-                </div>
             </div>
         </div>
     </div>
@@ -51,8 +44,10 @@
 
         let token = localStorage.getItem('readertoken');
         let user  = localStorage.getItem('readeruser');
+        document.getElementById("username").innerText = "roxerg";
 
         let clickedToday = false 
+        let count = 0
 
         const remember = localStorage.getItem('remember');
         if (!remember) {
@@ -62,6 +57,14 @@
             localStorage.removeItem('readertoken');
             localStorage.removeItem('readeruser');
             localStorage.removeItem('remember');
+        }
+
+        function logout() {
+            localStorage.removeItem('readertoken');
+            localStorage.removeItem('readeruser');
+
+            sessionStorage.removeItem('readertoken');
+            sessionStorage.removeItem('readeruser');
         }
 
         if (!token) {
@@ -79,7 +82,8 @@
             }).then((response) => {
             if (response.ok) {
                 response.json().then((res) => {
-                    document.getElementById("streak").innerText = res['streak']
+                    count = res['streak']
+                    document.getElementById("streak").innerText = count
                     const button = document.getElementById("button")
                     const disabled = (res['today'])
                     if (disabled) {
@@ -109,7 +113,7 @@
             }).then((response) => {
             if (response.ok) {
                 response.text().then((txt) => {
-                    console.log("marked")
+                    document.getElementById("streak").innerText = count + 1
                     button.classList.toggle('button-active')
                     button.classList.toggle('button-marked')
                 })
@@ -165,11 +169,12 @@ let x = setInterval(function() {
         font-family: Verdana, Geneva, Tahoma, sans-serif;
         background: #1b1b1b;
         color: #ffffff;
+        overflow-y: hidden;
     }
     .container {
       display: grid;
       grid-template-columns: [lefty] 30% [midx] auto [righty] 30%;
-      grid-template-rows: [topy] 18vh [midy] auto [bottomy] 18vh;
+      grid-template-rows: [topy] 10vh [midy] 80vh [bottomy] 10vh;
     }
     .item {
         grid-column: midx;
@@ -183,23 +188,13 @@ let x = setInterval(function() {
     .padded {
         margin-bottom: 10px;
     }
-    input {
-        background: #212121;
-        color: white;
-        border-style: solid;
-        border-color:black;
-        text-align: center;
-        border-width: 1px;
-        border-radius: 5px;
-        margin-bottom: 10px;
-    }
 
     button {
-        border-radius: 100px;
+        border-radius: 20vh;
         border-width: 20px;
-        width: 200px;
-        height: 200px;
-        font-size: 50px;
+        width: 30vh;
+        height: 30vh;
+        font-size: 10vh;
         border-style:solid;
         transition: all 0.5s;
     }
@@ -211,8 +206,8 @@ let x = setInterval(function() {
     .button-active:hover {
         background-color:#107ad1;
         border-color: #8cc5f3;
-        border-width: 40px;
-        font-size: 70px;
+        border-width: 30px;
+        font-size: 12vh;
     }
 
     .button-marked {
@@ -225,7 +220,6 @@ let x = setInterval(function() {
     .selector {
         opacity: 50%;
         align-items: center;
-        margin-top: 15vh;
         color: gray;
     }
     .comingsoon {
