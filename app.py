@@ -34,6 +34,8 @@ async def mark_today_read():
     if valid:
         if await db_client.mark_today(username):
             return "marked today"
+        else:
+            return "already marked"
     return error_response("unauthorized")
 
 @app.route("/api/mark-with-token", methods=['GET', 'POST'])

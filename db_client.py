@@ -69,16 +69,22 @@ async def mark_today(username):
     streak = 0
     user_id = None
     streak_res = await conn.fetch("SELECT streak, user_id FROM history JOIN users ON user_id=id WHERE username=$1 AND day=CURRENT_DATE-1;", username)
-    
+
     if len(streak_res) > 0:
         streak = streak_res[0]['streak']
         user_id = streak_res[0]['user_id']
     else:
         user_res = await conn.fetch("SELECT id FROM users WHERE username=$1", username)
         user_id = user_res[0]['id']
-
-    await conn.execute("INSERT INTO history (day, streak, user_id) VALUES (CURRENT_DATE, $1, $2)", streak+1, user_id)
+    
+    await conn.execute("INSERT INTO history (day, streak, user_id) VALUES (CURRENT_DATE, $1, $2) ON CONFLICT DO NOTHING", streak+1, user_id)
+    
+    streak_res = await conn.fetch("SELECT streak, user_id FROM history JOIN users ON user_id=id WHERE username=$1 AND day=CURRENT_DATE-1;", username)
+    
     await conn.close()
+
+    if (streak_res[0]['streak'] == streak):
+        return False
 
     return True
     
@@ -156,10 +162,6 @@ async def register(username, password):
 
     status = await conn.execute("INSERT INTO users (username, passwordHash) VALUES ($1, $2) ON CONFLICT DO NOTHING;", username, passwordHash.decode())
     await conn.close()
-
-    print(username)
-    print(password)
-    print(status)
 
     return status
 
