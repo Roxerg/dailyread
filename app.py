@@ -8,6 +8,7 @@ from flask_cors import CORS
 from flask import Response
 
 import db_client
+import re
 
 API_URL = os.environ['API_URL']
 
@@ -98,6 +99,10 @@ async def get_leaderboard():
 @app.route("/api/history", methods=['GET'])
 async def get_history():
     username = request.args.get('user')
+
+    if not input_check(username):
+        return error_response(status=400)
+
     if username == None:
         return error_response("user not specified", status=400)
 
@@ -106,8 +111,13 @@ async def get_history():
 
 @app.route("/api/register", methods=['POST'])
 async def register():
+
     username = request.json['user']
     password = request.json['pass']
+
+    if not login_valid(username, password):
+        return error_response(status=400)
+
 
     return await db_client.register(username, password)
 
@@ -115,6 +125,9 @@ async def register():
 async def login():
     username = request.json['user']
     password = request.json['pass']
+
+    if not login_valid(username, password):
+        return error_response(status=400)
 
     token = await db_client.verify_login(username, password)
     if token:
@@ -126,6 +139,9 @@ async def login():
 async def logout():
     auth_header = request.headers.get('Authorization')
     username = request.args.get('user')
+
+    if not input_check(username):
+        return error_response(status=400)
 
     if not auth_header:
         return "failed"
@@ -169,6 +185,18 @@ async def home_page():
 async def login_page():
     return render_template("login.html", api_url=API_URL)
 
+
+""" UTILS """
+
+def login_valid(user, pwd):
+    return input_check(user) and input_check(pwd)
+
+def input_check(input):
+    if len(input) < 3 or len(input) > 32:
+        return False
+    if re.search(r"[.,;()<>~#\/\\\"\'*$|\[\]\{\} &%]", input) != None:
+        return False
+    return True
 
 def no_content_response():
     return Response(status=204)

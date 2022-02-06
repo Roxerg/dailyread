@@ -67,6 +67,24 @@
         const user = document.getElementById('username').value
         const pass = document.getElementById('password').value
 
+        const re = /[.,;()<>~#\/\\\"\'* %]/g
+        let err = ''
+
+        if (user.search(re) !== -1 || pass.search(re) !== -1) {
+            err = 'username and/or password contains forbidden symbols'
+        }
+
+        if (user.length > 32 || pass.length > 32) {
+            err = 'username and/or password too long'
+        } else if (user.length < 3 || pass.length < 3) {
+            err = 'username and/or password too short'
+        }
+
+        if (err.length !== 0) {
+            document.getElementById("loginerror").innerText = err
+            return
+        }
+
 
         const creds = { "user" : user, "pass" : pass }
 
