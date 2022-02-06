@@ -71,6 +71,13 @@
         }
 
         function logout() {
+            fetch(`${baseUrl}/logout?user=${user}`,  {
+            headers: {
+                'Authorization' : 'Bearer ' + token
+            },
+            method: 'GET',
+            mode: 'cors',
+            }).then((response) => {console.log("logged out")})
             localStorage.removeItem('readertoken');
             localStorage.removeItem('readeruser');
 
@@ -79,7 +86,7 @@
         }
 
         if (!token) {
-            window.location.replace("/");
+            window.location.replace("/login");
         }
 
         function showAbout() {
@@ -190,36 +197,5 @@ let x = setInterval(function() {
 </script>
 
 <style>
-
-    .boxerg {
-        padding-top: 15px;
-        padding-bottom: 15px;
-    }
-    .padded {
-        margin-bottom: 10px;
-    }
-
-
-    .selector {
-        opacity: 50%;
-        align-items: center;
-        color: gray;
-    }
-    .comingsoon {
-        font-size: 5vw;
-    }
-    .unselected {
-        font-size: 60%;
-        opacity: 30%;
-    }
-    .selected {
-        font-size: 90%;
-    }
-    .streak {
-        font-size: 20px;
-    }
-    .streak-number {
-        font-size: 30px;
-    }
 </style>
 </html>

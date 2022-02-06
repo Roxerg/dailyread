@@ -40,18 +40,18 @@
     let rememberMe = true
     let mainPage = "/home"
     // Get data
-    let token = localStorage.getItem('readertoken');
+    // let token = localStorage.getItem('readertoken');
 
     const baseUrl = "{{ api_url }}"
 
-    if (token) {
-        window.location.replace(mainPage);
-    } else {
-        token = sessionStorage.getItem('readertoken');
-        if(token) {
-            window.location.replace(mainPage);
-        }
-    }
+    // if (token) {
+    //     window.location.replace(mainPage);
+    // } else {
+    //     token = sessionStorage.getItem('readertoken');
+    //     if(token) {
+    //         window.location.replace(mainPage);
+    //     }
+    // }
 
     function remember() {
         rememberMe = !rememberMe

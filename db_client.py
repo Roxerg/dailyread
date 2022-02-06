@@ -139,6 +139,13 @@ async def verify_token(token):
     else:
         return None
 
+async def logout(user, token):
+
+    conn = await get_connection()
+
+    await clean_tokens(conn)
+    await conn.execute("DELETE FROM sessions S USING users U WHERE S.user_id=U.id AND U.username=$1 AND S.token=$2", user, token)
+
 async def register(username, password):
 
     conn = await get_connection()

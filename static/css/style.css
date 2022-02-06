@@ -14,12 +14,12 @@ body {
     display: grid;
     justify-content: center;
     /* grid-template-columns: [lefty] auto [midx] 40vw [righty] auto; */
-    /* grid-template-rows: [topy] 10vh [midy] 80vh [bottomy] 10vh; */
+    grid-template-rows: [topy] 10vh [midy] 80vh [bottomy] 10vh;
 }
 
 .item {
     /* grid-column: midx; */
-    /* grid-row: midy; */
+    grid-row: midy;
     text-align: center;
 }
 
@@ -57,6 +57,14 @@ body {
 
 /* STREAK */
 
+    
+.streak {
+    font-size: 4vh;
+}
+.streak-number {
+    font-size: 7vh;
+}
+
 .fyah {
     display: inline-block;
     animation: flames 0.5s;
@@ -73,4 +81,24 @@ body {
     50% { opacity: 0.75; transform: rotate(25deg); scale: 1;}
     75% { opacity: 1; transform: rotate(0deg);scale: 1.5;}
     100% { opacity: 0.75; transform: rotate(-25deg); scale: 1;}
+}
+
+
+
+/* COMING SOON */
+
+.selector {
+    opacity: 50%;
+    align-items: center;
+    color: gray;
+}
+.comingsoon {
+    font-size: 5vw;
+}
+.unselected {
+    font-size: 60%;
+    opacity: 30%;
+}
+.selected {
+    font-size: 90%;
 }
