@@ -102,7 +102,6 @@ async def get_today(username):
     else: 
         return None
 
-
 async def verify_login(username, password):
     conn = await get_connection()
 
@@ -179,7 +178,9 @@ async def leaderboard(limit):
 async def userhistory(username):
 
     conn = await get_connection()
-    res = await conn.fetch("SELECT * FROM history JOIN users ON user_id=id WHERE username=$1", username)
+    res = await conn.fetch("SELECT streak, day FROM history JOIN users ON user_id=id WHERE username=$1 ORDER BY day DESC", username)
+    
+    await conn.close()
     return res
 
 
