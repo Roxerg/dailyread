@@ -11,7 +11,7 @@
     <div class="container">
         <div class="item">
             <div class="streak">
-                <span>STREAK</span>
+                <div class="fyah hidden">🔥</div><span> STREAK </span><div class="fyah hidden">🔥</div>
                 <div class="streak-number" id="streak">???</div>       
                 <br>
             </div>
@@ -86,6 +86,14 @@
                     document.getElementById("streak").innerText = count
                     const button = document.getElementById("button")
                     const disabled = (res['today'])
+
+                    if (count > 7) {
+                        document.querySelectorAll('.fyah').forEach((e) => {
+                            e.classList.toggle('hidden')
+                        })
+                    }
+                    
+
                     if (disabled) {
                         button.disabled = disabled
                         button.classList.toggle('button-active')
@@ -176,6 +184,36 @@ let x = setInterval(function() {
       grid-template-columns: [lefty] 30% [midx] auto [righty] 30%;
       grid-template-rows: [topy] 10vh [midy] 80vh [bottomy] 10vh;
     }
+    .fyah {
+        display: inline-block;
+        animation: flames 3s;
+        animation-iteration-count: infinite;
+        animation-timing-function: ease-in-out;
+    }
+    .hidden {
+        visibility: hidden;
+    }
+
+    @keyframes flames {
+        0% { opacity: 0.75; transform: rotate(-25deg);scale: 1;}
+        25% { opacity: 1; transform: rotate(0deg);scale: 1.2;}
+        50% { opacity: 0.75; transform: rotate(25deg); scale: 1;}
+        75% { opacity: 1; transform: rotate(0deg);scale: 1.2;}
+        100% { opacity: 0.75; transform: rotate(-25deg); scale: 1;}
+    }
+
+    /* @-moz-keyframes flames {
+        0% { opacity: 0; transform: rotateZ(-90deg);}
+        50% { opacity: 1; transform: rotateZ(90deg);}
+        100% { opacity: 0; transform: rotateZ(-90deg);}
+    }
+
+    @-webkit-keyframes flames {
+        0% { opacity: 0; transform: rotateZ(-90deg);}
+        50% { opacity: 1; transform: rotateZ(90deg);}
+        100% { opacity: 0; transform: rotateZ(-90deg);}
+    } */
+
     .item {
         grid-column: midx;
         grid-row: midy;
