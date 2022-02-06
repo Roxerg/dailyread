@@ -3,6 +3,10 @@
     src: url(../fonts/Nunito-VariableFont.ttf);
 }
 
+.title {
+    font-size: 6vh;
+}
+
 body {
     font-family: Nunito, Verdana, Geneva, Tahoma, sans-serif;
     background: #1b1b1b;
