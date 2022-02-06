@@ -98,6 +98,7 @@ async def get_today(username):
 
 async def verify_login(username, password):
     conn = await get_connection()
+
     res = await conn.fetch("SELECT * FROM users WHERE username=$1", username)
     if len(res) == 0:
         return False
@@ -155,6 +156,10 @@ async def register(username, password):
 
     status = await conn.execute("INSERT INTO users (username, passwordHash) VALUES ($1, $2) ON CONFLICT DO NOTHING;", username, passwordHash.decode())
     await conn.close()
+
+    print(username)
+    print(password)
+    print(status)
 
     return status
 

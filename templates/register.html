@@ -12,7 +12,7 @@
     <div class="container">
         <div class="item">
             <div>
-                <form id="login" target="dummyframe" class="boxerg">  
+                <form id="login" target="dummyframe">  
                         <input class="padded" id="username" type="text" placeholder="user" name="username" required>  
                         <br>
                         <input class="padded" id="password" type="password" placeholder="pass" name="password" required>  
@@ -69,9 +69,8 @@
 
 
         const creds = { "user" : user, "pass" : pass }
-        // https://read-daily.herokuapp.com/login
 
-        fetch(`${baseUrl}/api/register`,  {
+        fetch(`${baseUrl}/register`,  {
             headers: {
                 'Content-Type': 'application/json'
             },
@@ -93,44 +92,9 @@
 </script>
 
 <style>
-    .container {
-      display: grid;
-      grid-template-columns: [lefty] 40% [midx] auto [righty] 40%;
-      grid-template-rows: [topy] 18vh [midy] auto [bottomy] 18vh;
-    }
-    .item {
-        grid-column: midx;
-        grid-row: midy;
-        text-align: center;
-    }
-    .boxerg {
-        padding-top: 15px;
-        padding-bottom: 15px;
-    }
-    .padded {
-        margin-bottom: 10px;
-    }
     .blurb {
         color: grey;
         font-size: 2vh;
-    }
-    input {
-        background: #212121;
-        color: white;
-        border-style: solid;
-        border-color:black;
-        text-align: center;
-        border-width: 1px;
-        border-radius: 5px;
-        margin-bottom: 10px;
-    }
-    button {
-        background-color:#2196f3;
-        border-style:none;
-        border-radius: 10px;
-        padding: 10px 10px 10px 10px;
-        color: white;
-        font-weight: 700;
     }
 </style>
 </html>

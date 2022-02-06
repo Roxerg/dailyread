@@ -8,16 +8,53 @@
 
 
 <body>
+    <div id="dongle" class="silly out-of-reach"></div>
+    <div id="sidebar-leaderboard" class="sidebar out-of-reach">
+        couldn't load :(<br>
+    </div>
+    <div id="sidebar-about" class="sidebar out-of-reach">
+        This application is used for tracking whether you have done { an activity } each day. <br>
+        Currently only one activity is supported. <br>
+        You can click the button once per day, <br>
+        the app will keep track of how many consecutive days you clicked the button. <br>
+        That's it. 
+        <br>
+        made by <a href="https://whois.rogu.rocks">rokas g</a><br>
+    </div>
+    <div id="sidebar-api" class="sidebar out-of-reach">
+        This section will be expanded. <br>
+        You can use the tracker directly via API. <br>
+        To get current streak, you do not need any
+        authentication: <br>
+        <div class="codeblock">
+            curl \ <br>
+              --request GET \ <br> 
+              --url <span class="codetext">'{{ api_url }}/today?user=<span class="username codetextalt"></span>'</span> <br>
+        </div>
+        To mark current day as complete, you need to pass login <br>
+        details to the request:
+        <div class="codeblock">
+            curl \ <br> 
+            --request GET \ <br>
+            --url <span class="codetext">'{{ api_url }}/api/mark'</span> \ <br>
+            --header <span class="codetext">'Content-Type: application/json'</span> \ <br>
+            --data <span class="codetext">'{ <br>
+	            "user": <span class="username codetextalt"></span>, <br>
+	            "pass": <span class="codetextalt">%your password%</span> <br>
+            }' <br> </span>
+        </div>
+    </div>
+
     <div class="container">
         <div style="width: 98vw;">
-            <div style="float: right;"><span id="username">username loading</span> | <a href="/" onclick="logout()">logout</a></div>
-            <div style="float: left;">
+            <div style="float: right;"><span class="username">username loading</span> | <a href="/" onclick="logout()">logout</a></div>
+            <div style="margin-left: 3px; float: left;">
                 <span>
                 <a onclick="showAbout()"><b>? </b></a>
                 | 
-                <a href="">leaderboard</a>
+                <a onclick="leaderboard()">leaderboard</a>
                 | 
-                <a href="">API</a>
+                <a onclick="showApi()">API</a>
                 </span>
             </div>
         </div>
@@ -55,7 +92,9 @@
 
         let token = localStorage.getItem('readertoken');
         let user  = localStorage.getItem('readeruser');
-        document.getElementById("username").innerText = user;
+        document.querySelectorAll('.username').forEach((e) => {
+            e.innerText = user;
+        })
 
         let clickedToday = false 
         let count = 0
@@ -89,10 +128,66 @@
             window.location.replace("/login");
         }
 
+        let leaderboardVisible = false
+        let aboutVisible = false
+        let apiVisible = false
+
+
         function showAbout() {
-            alert(
-                "This application is used for tracking whether you have done { an activity } each day. Currently only one activity is supported. You can click the button once per day, the app will keep track of how many consecutive days you clicked the button. That's it. Made by: https://whois.rogu.rocks"
-            )
+            if (leaderboardVisible) leaderboard()
+            if (apiVisible) showApi()
+            aboutVisible = !aboutVisible
+            document.getElementById('sidebar-about').classList.toggle("out-of-reach")
+            document.getElementById('dongle').classList.toggle("out-of-reach")
+            document.getElementById('dongle').classList.toggle("dongle-about")
+        }
+        
+        function leaderboard() {
+            if (aboutVisible) showAbout()
+            if (apiVisible) showApi()
+            leaderboardVisible = !leaderboardVisible
+            document.getElementById('sidebar-leaderboard').classList.toggle("out-of-reach")
+            document.getElementById('dongle').classList.toggle("out-of-reach")
+            document.getElementById('dongle').classList.toggle("dongle-leaderboard")
+        }
+
+        function showApi() {
+            if (aboutVisible) showAbout()
+            if (leaderboardVisible) leaderboard()
+            apiVisible = !apiVisible
+            document.getElementById('sidebar-api').classList.toggle("out-of-reach")
+            document.getElementById('dongle').classList.toggle("out-of-reach")
+            document.getElementById('dongle').classList.toggle("dongle-api")
+        }
+
+        function get_leaderboard() {
+            fetch(`${baseUrl}/leaderboard`,  {
+                headers: {
+                    'Authorization' : 'Bearer ' + token
+                },
+                method: 'GET',
+                mode: 'cors',}).then((r) => {
+                    if (r.ok) {
+                        r.json().then((j) => {
+
+                            const toplist = j["leaderboard"].map((e) => {
+
+
+                                let topUser
+                                if (e.user === user) {
+                                    topUser = `<b>${e.user}</b>`
+                                } else {
+                                    topUser = e.user
+                                }
+
+                                return `${e.rank}. ${topUser} (x${e.streak}) <br>`
+                            }).join("")
+
+
+                            document.getElementById("sidebar-leaderboard").innerHTML = toplist
+                        })
+                    }
+                })
         }
         
         function get_streak() {
@@ -157,6 +252,7 @@
         }
 
         get_streak()
+        get_leaderboard()
 
 
 
@@ -182,7 +278,8 @@ let x = setInterval(function() {
 
   // Display the result in the element with id="demo"
   if (clickedToday) {
-    document.getElementById("demo").innerHTML = hours + ":" + minutes + ":" + seconds;
+    document.getElementById("demo").innerHTML = hours + ":" + minutes  + ":" + seconds;
+    document.getElementById("demo").innerHTML = `${hours}:${minutes >= 10 ? minutes : '0' + minutes}:${seconds >= 10 ? seconds : '0' + seconds}`;
   }
   
 
@@ -195,7 +292,4 @@ let x = setInterval(function() {
 }, 1000);
         
 </script>
-
-<style>
-</style>
 </html>

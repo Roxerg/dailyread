@@ -7,14 +7,14 @@ body {
     font-family: Nunito, Verdana, Geneva, Tahoma, sans-serif;
     background: #1b1b1b;
     color: #ffffff;
-    overflow-y: hidden;
+    overflow-y: scroll;
 }
 
 .container {
     display: grid;
     justify-content: center;
     /* grid-template-columns: [lefty] auto [midx] 40vw [righty] auto; */
-    grid-template-rows: [topy] 10vh [midy] 80vh [bottomy] 10vh;
+    grid-template-rows: [topy] 10vh [midy] 80vh [bottomy] 0vh;
 }
 
 .item {
@@ -23,6 +23,44 @@ body {
     text-align: center;
 }
 
+a {
+    transition: all 0.5s;
+    color: #2196f3;
+    cursor: pointer;
+}
+a:link,
+a:visited,
+a:hover,
+a:active {
+  text-decoration: none; 
+  color: #2196f3;
+}
+a:hover {
+    color: #a4d1f7;
+}
+
+input {
+    background: #212121;
+    color: white;
+    border-style: solid;
+    border-color:black;
+    text-align: center;
+    border-width: 1px;
+    border-radius: 5px;
+    margin-bottom: 10px;
+}
+button {
+    background-color:#2196f3;
+    border-style:none;
+    border-radius: 10px;
+    padding: 10px 10px 10px 10px;
+    color: white;
+    font-weight: 700;
+}
+
+.padded {
+    margin-bottom: 10px;
+}
 
 /* DAILY BUTTON */
 
@@ -49,10 +87,10 @@ body {
 }
 
 .main-button-marked {
-    background-color:#005005;
-    border-color: #2e7d32;
+    background-color:#338138;
+    border-color: #6eb872;
     border-width: 10px;
-    font-size: 70px;
+    font-size: 12vh;
 }
 
 /* STREAK */
@@ -83,7 +121,72 @@ body {
     100% { opacity: 0.75; transform: rotate(-25deg); scale: 1;}
 }
 
+/* SIDEBAR */
 
+.silly {
+    background: black;
+    position: absolute;
+    width: 90px;
+    height: 50px;
+    z-index: -1;
+    transition: ease-in-out 0.5s;
+}
+
+.dongle-about {
+    margin-left: calc(0px + -0.1vw);
+    width: 15px;
+}
+.dongle-leaderboard {
+    margin-left: calc(5px + 1vw);
+}
+.dongle-api {
+    margin-left: calc(106px + 1vw);
+    width: 32px;
+}
+
+#sidebar-about {
+    margin-left: calc(0px + -0.1vw);
+}
+#sidebar-leaderboard {
+    margin-left: calc(5px + 1vw);
+}
+#sidebar-api {
+    margin-left: calc(106px + 1vw);
+}
+
+
+.sidebar {
+    position: absolute;
+    z-index: 100;
+    margin-top:5vh;
+    background: black;
+    padding-bottom: 5vh;
+    padding-left: 2vh;
+    padding-top: 2vh;
+    padding-right: 2vh;
+    transition: ease-in-out 0.7s;
+}
+
+
+.out-of-reach {
+    margin-left: -200vh !important;
+}
+
+
+/* CODEBLOCK */
+.codeblock {
+    background: rgb(49, 49, 49);
+    padding-left: 5px;
+}
+
+.codetext {
+    color: rgb(155, 101, 0);
+}
+
+.codetextalt {
+    color: rgb(179, 15, 179);
+    font-weight: 500;
+}
 
 /* COMING SOON */
 

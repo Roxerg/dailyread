@@ -12,10 +12,10 @@
     <div class="container">
         <div class="item">
             <div>
-                <form id="login" target="dummyframe" class="boxerg">  
-                        <input class="padded" id="username" type="text" placeholder="user" name="username" required>  
+                <form id="login" target="dummyframe">  
+                        <input class="input-field padded" id="username" type="text" placeholder="user" name="username" required>  
                         <br>
-                        <input class="padded" id="password" type="password" placeholder="pass" name="password" required>  
+                        <input class="input-field padded" id="password" type="password" placeholder="pass" name="password" required>  
                         
                         <br>
                         <button class="padded" type="submit">login</button>   
@@ -23,9 +23,9 @@
 
                         <input class="padded" type="checkbox" checked="checked" onclick="remember()"> remember me   
                         <br>
-                        <span style="color:red" id="loginerror"></span>
+                        <span style="color:rgb(255, 187, 0)" id="loginerror"></span>
                         <br>
-                        <span><a href="/register">Register</a></span>
+                        <span><a href="/register">register</a></span>
                 </form>
             </div>
         </div>
@@ -94,34 +94,16 @@
             }).catch((e) => console.log("error", e));
     }
 
+    document.addEventListener("keyup", () => {
+            if (document.getElementById("loginerror").innerText.length > 0) {
+                document.getElementById("loginerror").innerText=""
+            }
+        })
+
+    // document.querySelectorAll('.input-field').forEach((e) => {
+        
+    // })
+
     document.getElementById('login').onsubmit = submit;
 </script>
-
-<style>
-    .boxerg {
-        padding-top: 15px;
-        padding-bottom: 15px;
-    }
-    .padded {
-        margin-bottom: 10px;
-    }
-    input {
-        background: #212121;
-        color: white;
-        border-style: solid;
-        border-color:black;
-        text-align: center;
-        border-width: 1px;
-        border-radius: 5px;
-        margin-bottom: 10px;
-    }
-    button {
-        background-color:#2196f3;
-        border-style:none;
-        border-radius: 10px;
-        padding: 10px 10px 10px 10px;
-        color: white;
-        font-weight: 700;
-    }
-</style>
 </html>
