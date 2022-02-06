@@ -83,8 +83,9 @@ async def mark_today(username):
     
     await conn.close()
 
-    if (streak_res[0]['streak'] == streak):
-        return False
+    if (len(streak_res) > 0):
+        if (streak_res[0]['streak'] == streak):
+            return False
 
     return True
     
