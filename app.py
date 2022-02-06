@@ -19,10 +19,9 @@ app.config['CORS_HEADERS'] = 'Content-Type'
 
 
 
-@app.route('/favicon.ico')
-def favicon():
-    return send_from_directory(os.path.join(app.root_path, 'static'),
-                               'favicon.ico', mimetype='image/vnd.microsoft.icon')
+@app.route('/favicon.ico', methods=['GET'])
+async def favicon():
+    return send_from_directory(os.path.join(app.root_path, 'static'), 'favicon.ico')
 
 # API ROUTES
 
