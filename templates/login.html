@@ -51,13 +51,11 @@
             document.getElementById("remember").click()
         }
     }
+    document.getElementById("remember").onclick = rememberCheck
 
     function rememberCheck() {
         rememberMe = !rememberMe
-        if (!initRemember) {
-            localStorage.setItem('remember', rememberMe)
-        }
-        initRemember = undefined
+        localStorage.setItem('remember', rememberMe)
     }
     
     function submit() {
