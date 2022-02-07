@@ -262,6 +262,8 @@
             }).then((response) => {
             if (response.ok) {
                 response.text().then((txt) => {
+                    const button = document.getElementById("button")
+                    button.disabled = true
                     document.getElementById("streak").innerText = count + 1
                     button.classList.toggle('main-button-active')
                     button.classList.toggle('main-button-marked')
