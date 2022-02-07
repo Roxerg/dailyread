@@ -20,10 +20,10 @@
                         <input class="input-field padded" id="password" type="password" placeholder="pass" name="password" required>  
                         
                         <br>
-                        <button class="padded" type="submit">login</button>   
+                        <input class="padded" type="checkbox" onclick="remember()"> remember me   
                         <br>
+                        <button class="padded" type="submit">login</button>   
 
-                        <input class="padded" type="checkbox" checked="checked" onclick="remember()"> remember me   
                         <br>
                         <span style="color:rgb(255, 187, 0)" id="loginerror"></span>
                         <br>
@@ -39,21 +39,10 @@
 
 
 <script>
-    let rememberMe = true
+    let rememberMe = false
     let mainPage = "/home"
-    // Get data
-    // let token = localStorage.getItem('readertoken');
 
     const baseUrl = "{{ api_url }}"
-
-    // if (token) {
-    //     window.location.replace(mainPage);
-    // } else {
-    //     token = sessionStorage.getItem('readertoken');
-    //     if(token) {
-    //         window.location.replace(mainPage);
-    //     }
-    // }
 
     function remember() {
         rememberMe = !rememberMe
