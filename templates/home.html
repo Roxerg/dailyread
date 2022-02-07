@@ -201,15 +201,7 @@
                 })
         }
         
-        let gettingStreak = false
         function get_streak() {
-
-            if (gettingStreak) {
-                console.log("fuck outta here with that double click")
-                return
-            }
-
-            gettingStreak = true
 
             console.log("got past")
 
@@ -248,11 +240,19 @@
             } else {
                 document.getElementById("streak").innerText = -1
             }
-            gettingStreak = false
             }).catch((e) => console.log("error", e));
         }
 
+        let gettingStreak = false
         function mark_today() {
+
+            if (gettingStreak) {
+                console.log("fuck outta here with that double click")
+                return
+            }
+
+            gettingStreak = true
+
             fetch(`${baseUrl}/mark-with-token`,  {
             headers: {
                 'Authorization' : 'Bearer ' + token
@@ -269,6 +269,8 @@
             } else {
                 document.getElementById("streak").innerText = -1
             }
+            }).then(() => {
+                gettingStreak = false
             }).catch((e) => console.log("error", e));
 
         }
