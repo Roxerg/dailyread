@@ -47,8 +47,9 @@
     const rememberSaved = localStorage.getItem("remember")
 
     if (rememberSaved === "true") {
-        console.log("click")
-        document.getElementById("remember").click()
+        if (!document.getElementById("remember").checked) {
+            document.getElementById("remember").click()
+        }
     }
 
     function rememberCheck() {
