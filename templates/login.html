@@ -44,9 +44,9 @@
 
     const baseUrl = "{{ api_url }}"
 
-    const rememberSaved = localStorage.getItem("remember")
+    const initRemember = localStorage.getItem("remember")
 
-    if (rememberSaved === "true") {
+    if (initRemember === "true") {
         if (!document.getElementById("remember").checked) {
             document.getElementById("remember").click()
         }
@@ -54,7 +54,10 @@
 
     function rememberCheck() {
         rememberMe = !rememberMe
-        localStorage.setItem('remember', rememberMe)
+        if (!initRemember) {
+            localStorage.setItem('remember', rememberMe)
+        }
+        initRemember = undefined
     }
     
     function submit() {
