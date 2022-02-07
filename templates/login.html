@@ -20,7 +20,7 @@
                         <input class="input-field padded" id="password" type="password" placeholder="pass" name="password" required>  
                         
                         <br>
-                        <input class="padded" type="checkbox" onclick="remember()"> remember me   
+                        <input id="remember" class="padded" type="checkbox" onclick="rememberCheck()"> remember me   
                         <br>
                         <button class="padded" type="submit">login</button>   
 
@@ -44,8 +44,16 @@
 
     const baseUrl = "{{ api_url }}"
 
-    function remember() {
+    const rememberSaved = localStorage.getItem("remember")
+
+    if (rememberSaved === "true") {
+        console.log("click")
+        document.getElementById("remember").click()
+    }
+
+    function rememberCheck() {
         rememberMe = !rememberMe
+        localStorage.setItem('remember', rememberMe)
     }
     
     function submit() {
