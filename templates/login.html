@@ -44,7 +44,7 @@
 
     const baseUrl = "{{ api_url }}"
 
-    const initRemember = localStorage.getItem("remember")
+    let initRemember = localStorage.getItem("remember")
 
     if (initRemember === "true") {
         if (!document.getElementById("remember").checked) {
