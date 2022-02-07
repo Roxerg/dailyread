@@ -201,7 +201,17 @@
                 })
         }
         
+        let gettingStreak = false
         function get_streak() {
+
+            if (gettingStreak) {
+                console.log("fuck outta here with that double click")
+                return
+            }
+
+            gettingStreak = true
+
+            console.log("got past")
 
             fetch(`${baseUrl}/today/verbose?user=${user}`,  {
             headers: {
@@ -238,6 +248,7 @@
             } else {
                 document.getElementById("streak").innerText = -1
             }
+            gettingStreak = false
             }).catch((e) => console.log("error", e));
         }
 
