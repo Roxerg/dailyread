@@ -1,8 +1,10 @@
 <html>
     
 <head>
+    <title>read?.(today)</title>
     <meta content="text/html;charset=utf-8" http-equiv="Content-Type">
     <meta content="utf-8" http-equiv="encoding">    
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 
 
@@ -11,11 +13,22 @@
     <div class="container">
         <div class="item">
             <div>
-                <form id="login" target="dummyframe" class="boxerg">  
+                <div class="title">read?.(today)</div>
+                <form id="login" target="dummyframe">  
                         <input class="padded" id="username" type="text" placeholder="user" name="username" required>  
                         <br>
                         <input class="padded" id="password" type="password" placeholder="pass" name="password" required>  
                         
+                        <br>
+                        <span class="blurb">
+                            This application is not super secure - <br>
+                            <b>DO NOT</b> use a password that is used elsewhere.
+                            <br>
+                            If you forgot your password you will need to contact the dev.
+                            <br>
+                            Only data being stored is your login info, and timestamps of your daily click.
+                            <br>
+                        </span>
                         <br>
                         <button class="padded" type="submit">register</button>   
 
@@ -56,11 +69,28 @@
         const user = document.getElementById('username').value
         const pass = document.getElementById('password').value
 
+        const re = /[.,;()<>~#\/\\\"\'* %]/g
+        let err = ''
+
+        if (user.search(re) !== -1 || pass.search(re) !== -1) {
+            err = 'username and/or password contains forbidden symbols'
+        }
+
+        if (user.length > 32 || pass.length > 32) {
+            err = 'username and/or password too long'
+        } else if (user.length < 3 || pass.length < 3) {
+            err = 'username and/or password too short'
+        }
+
+        if (err.length !== 0) {
+            document.getElementById("loginerror").innerText = err
+            return
+        }
+
 
         const creds = { "user" : user, "pass" : pass }
-        // https://read-daily.herokuapp.com/login
 
-        fetch(`${baseUrl}/api/register`,  {
+        fetch(`${baseUrl}/register`,  {
             headers: {
                 'Content-Type': 'application/json'
             },
@@ -82,45 +112,9 @@
 </script>
 
 <style>
-    body {
-        font-family: Verdana, Geneva, Tahoma, sans-serif;
-        background: #1b1b1b;
-        color: #ffffff;
-    }
-    .container {
-      display: grid;
-      grid-template-columns: [lefty] 40% [midx] auto [righty] 40%;
-      grid-template-rows: [topy] 18vh [midy] auto [bottomy] 18vh;
-    }
-    .item {
-        grid-column: midx;
-        grid-row: midy;
-        text-align: center;
-    }
-    .boxerg {
-        padding-top: 15px;
-        padding-bottom: 15px;
-    }
-    .padded {
-        margin-bottom: 10px;
-    }
-    input {
-        background: #212121;
-        color: white;
-        border-style: solid;
-        border-color:black;
-        text-align: center;
-        border-width: 1px;
-        border-radius: 5px;
-        margin-bottom: 10px;
-    }
-    button {
-        background-color:#2196f3;
-        border-style:none;
-        border-radius: 10px;
-        padding: 10px 10px 10px 10px;
-        color: white;
-        font-weight: 700;
+    .blurb {
+        color: grey;
+        font-size: 2vh;
     }
 </style>
 </html>

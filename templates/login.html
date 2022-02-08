@@ -1,8 +1,10 @@
 <html>
     
 <head>
+    <title>read?.(today)</title>
     <meta content="text/html;charset=utf-8" http-equiv="Content-Type">
     <meta content="utf-8" http-equiv="encoding">    
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 
 
@@ -11,20 +13,21 @@
     <div class="container">
         <div class="item">
             <div>
-                <form id="login" target="dummyframe" class="boxerg">  
-                        <input class="padded" id="username" type="text" placeholder="user" name="username" required>  
+                <div class="title">read?.(today)</div>
+                <form id="login" target="dummyframe">  
+                        <input class="input-field padded" id="username" type="text" placeholder="user" name="username" required>  
                         <br>
-                        <input class="padded" id="password" type="password" placeholder="pass" name="password" required>  
+                        <input class="input-field padded" id="password" type="password" placeholder="pass" name="password" required>  
                         
                         <br>
+                        <input id="remember" class="padded" type="checkbox" onclick="rememberCheck()"> remember me   
+                        <br>
                         <button class="padded" type="submit">login</button>   
-                        <br>
 
-                        <input class="padded" type="checkbox" checked="checked" onclick="remember()"> remember me   
                         <br>
-                        <span style="color:red" id="loginerror"></span>
+                        <span style="color:rgb(255, 187, 0)" id="loginerror"></span>
                         <br>
-                        <span><a href="/register">Register</a></span>
+                        <span><a href="/register">register</a></span>
                 </form>
             </div>
         </div>
@@ -36,24 +39,25 @@
 
 
 <script>
-    let rememberMe = true
+    let rememberMe = document.getElementById("remember").checked
     let mainPage = "/home"
-    // Get data
-    let token = localStorage.getItem('readertoken');
 
     const baseUrl = "{{ api_url }}"
 
-    if (token) {
-        window.location.replace(mainPage);
-    } else {
-        token = sessionStorage.getItem('readertoken');
-        if(token) {
-            window.location.replace(mainPage);
+    let initRemember = localStorage.getItem("remember")
+
+    if (initRemember === "true") {
+        if (!document.getElementById("remember").checked) {
+            document.getElementById("remember").click()
+            rememberMe = true
         }
     }
+    document.getElementById("remember").onclick = rememberCheck
 
-    function remember() {
+    function rememberCheck() {
         rememberMe = !rememberMe
+        localStorage.removeItem('remember')
+        localStorage.setItem('remember', rememberMe)
     }
     
     function submit() {
@@ -93,49 +97,16 @@
             }).catch((e) => console.log("error", e));
     }
 
+    document.addEventListener("keyup", () => {
+            if (document.getElementById("loginerror").innerText.length > 0) {
+                document.getElementById("loginerror").innerText=""
+            }
+        })
+
+    // document.querySelectorAll('.input-field').forEach((e) => {
+        
+    // })
+
     document.getElementById('login').onsubmit = submit;
 </script>
-
-<style>
-    body {
-        font-family: Verdana, Geneva, Tahoma, sans-serif;
-        background: #1b1b1b;
-        color: #ffffff;
-    }
-    .container {
-      display: grid;
-      grid-template-columns: [lefty] 40% [midx] auto [righty] 40%;
-      grid-template-rows: [topy] 18vh [midy] auto [bottomy] 18vh;
-    }
-    .item {
-        grid-column: midx;
-        grid-row: midy;
-        text-align: center;
-    }
-    .boxerg {
-        padding-top: 15px;
-        padding-bottom: 15px;
-    }
-    .padded {
-        margin-bottom: 10px;
-    }
-    input {
-        background: #212121;
-        color: white;
-        border-style: solid;
-        border-color:black;
-        text-align: center;
-        border-width: 1px;
-        border-radius: 5px;
-        margin-bottom: 10px;
-    }
-    button {
-        background-color:#2196f3;
-        border-style:none;
-        border-radius: 10px;
-        padding: 10px 10px 10px 10px;
-        color: white;
-        font-weight: 700;
-    }
-</style>
 </html>

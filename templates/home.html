@@ -1,21 +1,75 @@
 <!DOCTYPE html>
 
 <head>
+    <title>read?.(today)</title>
+    <meta name="description" content="Track daily tasks with this single-action app" />
+
+
     <meta content="text/html;charset=utf-8" http-equiv="Content-Type">
     <meta content="utf-8" http-equiv="encoding">  
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 
 
 <body>
+    <div id="dongle" class="silly out-of-reach"></div>
+    <div id="sidebar-leaderboard" class="sidebar out-of-reach">
+        couldn't load :(<br>
+    </div>
+    <div id="sidebar-about" class="sidebar out-of-reach">
+        This application is used for tracking whether you have done { an activity } each day. <br>
+        Currently only one activity is supported. <br>
+        You can click the button once per day, <br>
+        the app will keep track of how many consecutive days you clicked the button. <br>
+        That's it. 
+        <br>
+        made by <a href="https://whois.rogu.rocks">rokas g</a><br>
+    </div>
+    <div id="sidebar-api" class="sidebar out-of-reach">
+        This section will be expanded. <br>
+        You can use the tracker directly via API. <br>
+        To get current streak, you do not need any
+        authentication: <br>
+        <div class="codeblock">
+            curl \ <br>
+              --request GET \ <br> 
+              --url <span class="codetext">'{{ api_url }}/today?user=<span class="username codetextalt"></span>'</span> <br>
+        </div>
+        To mark current day as complete, you need to pass login <br>
+        details to the request:
+        <div class="codeblock">
+            curl \ <br> 
+            --request GET \ <br>
+            --url <span class="codetext">'{{ api_url }}/mark'</span> \ <br>
+            --header <span class="codetext">'Content-Type: application/json'</span> \ <br>
+            --data <span class="codetext">'{ <br>
+	            "user": "<span class="username codetextalt"></span>", <br>
+	            "pass": "<span class="codetextalt">%your password%</span>" <br>
+            }' <br> </span>
+        </div>
+    </div>
+
     <div class="container">
-        <div class="item">
+        <div style="width: 98vw;">
+            <div style="float: right;"><span class="username">username loading</span> | <a href="/" onclick="logout()">logout</a></div>
+            <div style="margin-left: 3px; float: left;">
+                <span>
+                <a onclick="showAbout()"><b>? </b></a>
+                | 
+                <a onclick="leaderboard()">leaderboard</a>
+                | 
+                <a onclick="showApi()">API</a>
+                </span>
+            </div>
+            
+        </div>
+        <div id="main-stuff" class="item">
             <div class="streak">
-                <span>STREAK</span>
+                <div class="fyah hidden">🔥</div><span> STREAK </span><div class="fyah hidden">🔥</div>
                 <div class="streak-number" id="streak">???</div>       
                 <br>
             </div>
-            
-            <div><button class="button-active" id="button" type="button" onclick="mark_today()">📚</button></div>
+            <div><button class="main-button main-button-active" id="button" type="button" onclick="mark_today()">📚</button></div>
             <br>
             <span id="until-text"></span><span id="demo"></span>
             <div class="selector">
@@ -32,14 +86,6 @@
                     <span class="unselected">🥗</span>
                     <span>></span>
                 </div>
-                <div>
-                    Leaderboard
-                    <div>
-                        1. test <br>
-                        2. guy <br>
-                        3. mate <br>
-                    </div>
-                </div>
             </div>
         </div>
     </div>
@@ -51,8 +97,12 @@
 
         let token = localStorage.getItem('readertoken');
         let user  = localStorage.getItem('readeruser');
+        document.querySelectorAll('.username').forEach((e) => {
+            e.innerText = user;
+        })
 
         let clickedToday = false 
+        let count = 0
 
         const remember = localStorage.getItem('remember');
         if (!remember) {
@@ -64,11 +114,96 @@
             localStorage.removeItem('remember');
         }
 
+        function logout() {
+            fetch(`${baseUrl}/logout?user=${user}`,  {
+            headers: {
+                'Authorization' : 'Bearer ' + token
+            },
+            method: 'GET',
+            mode: 'cors',
+            }).then((response) => {console.log("logged out")})
+            localStorage.removeItem('readertoken');
+            localStorage.removeItem('readeruser');
+
+            sessionStorage.removeItem('readertoken');
+            sessionStorage.removeItem('readeruser');
+        }
+
         if (!token) {
-            window.location.replace("/");
+            window.location.replace("/login");
+        }
+
+        let leaderboardVisible = false
+        let aboutVisible = false
+        let apiVisible = false
+
+
+        function showAbout() {
+            if (leaderboardVisible) leaderboard()
+            if (apiVisible) showApi()
+            aboutVisible = !aboutVisible
+            document.getElementById('sidebar-about').classList.toggle("out-of-reach")
+            document.getElementById('dongle').classList.toggle("out-of-reach")
+            document.getElementById('dongle').classList.toggle("dongle-about")
+        }
+        
+        function leaderboard() {
+            if (aboutVisible) showAbout()
+            if (apiVisible) showApi()
+            leaderboardVisible = !leaderboardVisible
+            document.getElementById('sidebar-leaderboard').classList.toggle("out-of-reach")
+            document.getElementById('dongle').classList.toggle("out-of-reach")
+            document.getElementById('dongle').classList.toggle("dongle-leaderboard")
+        }
+
+        function showApi() {
+            if (aboutVisible) showAbout()
+            if (leaderboardVisible) leaderboard()
+            apiVisible = !apiVisible
+            document.getElementById('sidebar-api').classList.toggle("out-of-reach")
+            document.getElementById('dongle').classList.toggle("out-of-reach")
+            document.getElementById('dongle').classList.toggle("dongle-api")
+        }
+
+        function hideAllSidebars() {
+            if (aboutVisible) showAbout()
+            if (leaderboardVisible) leaderboard()
+            if (apiVisible) showApi()
+        }
+
+        function get_leaderboard() {
+            fetch(`${baseUrl}/leaderboard`,  {
+                headers: {
+                    'Authorization' : 'Bearer ' + token
+                },
+                method: 'GET',
+                mode: 'cors',}).then((r) => {
+                    if (r.ok) {
+                        r.json().then((j) => {
+
+                            const toplist = j["leaderboard"].map((e) => {
+
+
+                                let topUser
+                                if (e.user === user) {
+                                    topUser = `<b class="leaderboard-you">${e.user}</b>`
+                                } else {
+                                    topUser = e.user
+                                }
+
+                                return `${e.rank}. ${topUser} (x${e.streak}) <br>`
+                            }).join("")
+
+
+                            document.getElementById("sidebar-leaderboard").innerHTML = toplist
+                        })
+                    }
+                })
         }
         
         function get_streak() {
+
+            console.log("got past")
 
             fetch(`${baseUrl}/today/verbose?user=${user}`,  {
             headers: {
@@ -79,13 +214,22 @@
             }).then((response) => {
             if (response.ok) {
                 response.json().then((res) => {
-                    document.getElementById("streak").innerText = res['streak']
+                    count = res['streak']
+                    document.getElementById("streak").innerText = count
                     const button = document.getElementById("button")
                     const disabled = (res['today'])
+
+                    if (count > 7) {
+                        document.querySelectorAll('.fyah').forEach((e) => {
+                            e.classList.toggle('hidden')
+                        })
+                    }
+                    
+
                     if (disabled) {
                         button.disabled = disabled
-                        button.classList.toggle('button-active')
-                        button.classList.toggle('button-marked')
+                        button.classList.toggle('main-button-active')
+                        button.classList.toggle('main-button-marked')
 
                         clickedToday = true
 
@@ -99,7 +243,16 @@
             }).catch((e) => console.log("error", e));
         }
 
+        let gettingStreak = false
         function mark_today() {
+
+            if (gettingStreak) {
+                console.log("fuck outta here with that double click")
+                return
+            }
+
+            gettingStreak = true
+
             fetch(`${baseUrl}/mark-with-token`,  {
             headers: {
                 'Authorization' : 'Bearer ' + token
@@ -109,16 +262,27 @@
             }).then((response) => {
             if (response.ok) {
                 response.text().then((txt) => {
-                    console.log("marked")
+                    const button = document.getElementById("button")
+                    button.disabled = true
+                    document.getElementById("streak").innerText = count + 1
+                    button.classList.toggle('main-button-active')
+                    button.classList.toggle('main-button-marked')
                 })
             } else {
                 document.getElementById("streak").innerText = -1
             }
+            }).then(() => {
+                gettingStreak = false
             }).catch((e) => console.log("error", e));
 
         }
 
         get_streak()
+        get_leaderboard()
+
+        document.getElementById("main-stuff").addEventListener("click", () => {
+            hideAllSidebars()
+        })
 
 
 
@@ -144,7 +308,8 @@ let x = setInterval(function() {
 
   // Display the result in the element with id="demo"
   if (clickedToday) {
-    document.getElementById("demo").innerHTML = hours + ":" + minutes + ":" + seconds;
+    document.getElementById("demo").innerHTML = hours + ":" + minutes  + ":" + seconds;
+    document.getElementById("demo").innerHTML = `${hours}:${minutes >= 10 ? minutes : '0' + minutes}:${seconds >= 10 ? seconds : '0' + seconds}`;
   }
   
 
@@ -157,90 +322,4 @@ let x = setInterval(function() {
 }, 1000);
         
 </script>
-
-<style>
-    body {
-        font-family: Verdana, Geneva, Tahoma, sans-serif;
-        background: #1b1b1b;
-        color: #ffffff;
-    }
-    .container {
-      display: grid;
-      grid-template-columns: [lefty] 30% [midx] auto [righty] 30%;
-      grid-template-rows: [topy] 18vh [midy] auto [bottomy] 18vh;
-    }
-    .item {
-        grid-column: midx;
-        grid-row: midy;
-        text-align: center;
-    }
-    .boxerg {
-        padding-top: 15px;
-        padding-bottom: 15px;
-    }
-    .padded {
-        margin-bottom: 10px;
-    }
-    input {
-        background: #212121;
-        color: white;
-        border-style: solid;
-        border-color:black;
-        text-align: center;
-        border-width: 1px;
-        border-radius: 5px;
-        margin-bottom: 10px;
-    }
-
-    button {
-        border-radius: 100px;
-        border-width: 20px;
-        width: 200px;
-        height: 200px;
-        font-size: 50px;
-        border-style:solid;
-        transition: all 0.5s;
-    }
-
-    .button-active {
-        background-color:#2196f3;
-        border-color: #6db4ee;
-    }
-    .button-active:hover {
-        background-color:#107ad1;
-        border-color: #8cc5f3;
-        border-width: 40px;
-        font-size: 70px;
-    }
-
-    .button-marked {
-        background-color:#005005;
-        border-color: #2e7d32;
-        border-width: 10px;
-        font-size: 70px;
-    }
-
-    .selector {
-        opacity: 50%;
-        align-items: center;
-        margin-top: 15vh;
-        color: gray;
-    }
-    .comingsoon {
-        font-size: 50px;
-    }
-    .unselected {
-        font-size: 40px;
-        opacity: 30%;
-    }
-    .selected {
-        font-size: 60px;
-    }
-    .streak {
-        font-size: 20px;
-    }
-    .streak-number {
-        font-size: 30px;
-    }
-</style>
 </html>

@@ -69,16 +69,23 @@ async def mark_today(username):
     streak = 0
     user_id = None
     streak_res = await conn.fetch("SELECT streak, user_id FROM history JOIN users ON user_id=id WHERE username=$1 AND day=CURRENT_DATE-1;", username)
-    
+
     if len(streak_res) > 0:
         streak = streak_res[0]['streak']
         user_id = streak_res[0]['user_id']
     else:
         user_res = await conn.fetch("SELECT id FROM users WHERE username=$1", username)
         user_id = user_res[0]['id']
-
-    await conn.execute("INSERT INTO history (day, streak, user_id) VALUES (CURRENT_DATE, $1, $2)", streak+1, user_id)
+    
+    await conn.execute("INSERT INTO history (day, streak, user_id) VALUES (CURRENT_DATE, $1, $2) ON CONFLICT DO NOTHING", streak+1, user_id)
+    
+    streak_res = await conn.fetch("SELECT streak, user_id FROM history JOIN users ON user_id=id WHERE username=$1 AND day=CURRENT_DATE-1;", username)
+    
     await conn.close()
+
+    if (len(streak_res) > 0):
+        if (streak_res[0]['streak'] == streak):
+            return False
 
     return True
     
@@ -95,9 +102,9 @@ async def get_today(username):
     else: 
         return None
 
-
 async def verify_login(username, password):
     conn = await get_connection()
+
     res = await conn.fetch("SELECT * FROM users WHERE username=$1", username)
     if len(res) == 0:
         return False
@@ -139,6 +146,13 @@ async def verify_token(token):
     else:
         return None
 
+async def logout(user, token):
+
+    conn = await get_connection()
+
+    await clean_tokens(conn)
+    await conn.execute("DELETE FROM sessions S USING users U WHERE S.user_id=U.id AND U.username=$1 AND S.token=$2", user, token)
+
 async def register(username, password):
 
     conn = await get_connection()
@@ -164,7 +178,9 @@ async def leaderboard(limit):
 async def userhistory(username):
 
     conn = await get_connection()
-    res = await conn.fetch("SELECT * FROM history JOIN users ON user_id=id WHERE username=$1", username)
+    res = await conn.fetch("SELECT streak, day FROM history JOIN users ON user_id=id WHERE username=$1 ORDER BY day DESC", username)
+    
+    await conn.close()
     return res
 
 

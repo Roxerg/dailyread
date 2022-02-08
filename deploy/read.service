@@ -1,0 +1,12 @@
+[Unit]
+Description=read.service - A Flask application run with Gunicorn. should be in /etc/systemd/system/read.service
+After=network.target
+ 
+[Service]
+User=www-data
+Group=www-data
+WorkingDirectory=<project-path>
+ExecStart=<project-path>/env/bin/gunicorn --workers 1  wsgi:app
+ 
+[Install]
+WantedBy=multi-user.target
