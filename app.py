@@ -23,26 +23,22 @@ app.config['CORS_HEADERS'] = 'Content-Type'
 async def favicon():
     return send_from_directory(os.path.join(app.root_path, 'static'), 'favicon.ico')
 
-# API ROUTES
+### API ROUTES ###
 
 
 @app.route("/api/mark", methods=['GET', 'POST'])
-async def mark_today_read():
+async def mark_today_read_login():
     if request.json == None:
         return "body must contain login (user, pass)"
 
     if not 'user' in request.json or not 'pass' in request.json:
         return "body must contain login (user, pass)"
 
-    username = request.json['user']
-    password = request.json['pass']
+    username, password = get_credentials()
 
     valid = await db_client.verify_login(username, password)
     if valid:
-        if await db_client.mark_today(username):
-            return "marked today"
-        else:
-            return "already marked"
+        return await mark_today(user_data["username"])
     return error_response("unauthorized")
 
 @app.route("/api/mark-with-token", methods=['GET', 'POST'])
@@ -50,16 +46,20 @@ async def mark_today_read_token():
     auth_header = request.headers.get('Authorization')
 
     if not auth_header:
-        return error_response("unauthorized")
+        return error_response("no auth")
 
     auth_token = auth_header.split(" ")[1]
 
     if auth_token:
         user_data = await db_client.verify_token(auth_token)
-        if await db_client.mark_today(user_data["username"]):
-            return "marked today"
+        return await mark_today(user_data["username"])
     return error_response("unauthorized")
 
+async def mark_today_read(username):
+    if await db_client.mark_today(username):
+        return "marked today"
+    else:
+        return "already marked"
 
 @app.route("/api/today", methods=['GET'])
 async def get_today_status():
@@ -113,7 +113,7 @@ async def get_history():
         return error_response("user not specified", status=400)
 
     streak = await db_client.userhistory(username)
-    print(streak)
+    
     response = list(map(lambda x : {
         "day": x["day"].strftime('%d-%m-%Y'),
         "streak" : x["streak"],
@@ -122,9 +122,7 @@ async def get_history():
 
 @app.route("/api/register", methods=['POST'])
 async def register():
-
-    username = request.json['user']
-    password = request.json['pass']
+    username, password = get_credentials()
 
     if not login_valid(username, password):
         return error_response(status=400)
@@ -134,8 +132,7 @@ async def register():
 
 @app.route("/api/login", methods=['GET', 'POST'])
 async def login():
-    username = request.json['user']
-    password = request.json['pass']
+    username, password = get_credentials()
 
     if not login_valid(username, password):
         return error_response(status=400)
@@ -165,7 +162,7 @@ async def logout():
     return error_response("logout failed, token not deleted")
 
 
-# TEMPLATE ROUTES
+### TEMPLATE ROUTES ###
 
 @app.route("/", methods=['GET'])
 async def landing_page():
@@ -197,7 +194,7 @@ async def login_page():
     return render_template("login.html", api_url=API_URL)
 
 
-""" UTILS """
+### UTILS ###
 
 def login_valid(user, pwd):
     return input_check(user) and input_check(pwd)
@@ -217,3 +214,9 @@ def error_response(content=None, status=401, mimetype="application/json"):
         return Response(content, status=status, mimetype=mimetype)
     else:
         return Response(status=status, mimetype=mimetype)
+
+def get_credentials():
+    username = request.json['user']
+    password = request.json['pass']
+
+    return username, password

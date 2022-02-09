@@ -160,7 +160,11 @@ async def register(username, password):
     salt = bcrypt.gensalt()
     passwordHash = bcrypt.hashpw(str.encode(password), salt)
 
+    
     status = await conn.execute("INSERT INTO users (username, passwordHash) VALUES ($1, $2) ON CONFLICT DO NOTHING;", username, passwordHash.decode())
+    newusr = await conn.fetch("SELECT id FROM users WHERE username = $1", username)
+    await conn.execute("INSERT INTO history VALUES (CURRENT_DATE - INTEGER '1' , 1, $1)", newusr[0]["id"])
+
     await conn.close()
 
     return status
