@@ -166,11 +166,21 @@ async def register(username, password):
 
     return status
 
-async def leaderboard(limit):
+async def leaderboard_overall(limit):
 
     conn = await get_connection()
 
     res = await conn.fetch("SELECT username, MAX(streak) as topstreak FROM users JOIN history ON user_id=id GROUP BY username ORDER BY topstreak DESC LIMIT $1", limit)
+
+    res = [{"rank": i+1, "user" : x['username'], "streak": x['topstreak']} for i,x in enumerate(res)]
+    await conn.close()
+    return res
+
+async def leaderboard_ongoing(limit):
+
+    conn = await get_connection()
+
+    res = await conn.fetch("SELECT username, MAX(streak) as topstreak FROM users JOIN history ON user_id=id WHERE day=CURRENT_DATE GROUP BY username ORDER BY topstreak DESC LIMIT $1", limit)
 
     res = [{"rank": i+1, "user" : x['username'], "streak": x['topstreak']} for i,x in enumerate(res)]
     await conn.close()

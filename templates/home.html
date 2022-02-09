@@ -14,7 +14,13 @@
 <body>
     <div id="dongle" class="silly out-of-reach"></div>
     <div id="sidebar-leaderboard" class="sidebar out-of-reach">
-        couldn't load :(<br>
+        <b>currently going:</b> 
+        <br>
+        <span id="sidebar-leaderboard-ongoing">couldn't load ;(</span>
+        <br> 
+        <b>all time:</b> 
+        <br>
+        <span id="sidebar-leaderboard-overall">couldn't load ;(</span>
     </div>
     <div id="sidebar-about" class="sidebar out-of-reach">
         This application is used for tracking whether you have done { an activity } each day. <br>
@@ -39,7 +45,7 @@
         details to the request:
         <div class="codeblock">
             curl \ <br> 
-            --request GET \ <br>
+            --request POST \ <br>
             --url <span class="codetext">'{{ api_url }}/mark'</span> \ <br>
             --header <span class="codetext">'Content-Type: application/json'</span> \ <br>
             --data <span class="codetext">'{ <br>
@@ -51,14 +57,14 @@
 
     <div class="container">
         <div style="width: 98vw;">
-            <div style="float: right;"><span class="username">username loading</span> | <a href="/" onclick="logout()">logout</a></div>
+            <div style="float: right;"><span class="username">username loading</span> | <a href="/" id="logout">logout</a></div>
             <div style="margin-left: 3px; float: left;">
                 <span>
-                <a onclick="showAbout()"><b>? </b></a>
+                <a id="showAbout"><b>? </b></a>
                 | 
-                <a onclick="leaderboard()">leaderboard</a>
+                <a id="showLeaderboard">leaderboard</a>
                 | 
-                <a onclick="showApi()">API</a>
+                <a id="showApi">API</a>
                 </span>
             </div>
             
@@ -69,7 +75,7 @@
                 <div class="streak-number" id="streak">???</div>       
                 <br>
             </div>
-            <div><button class="main-button main-button-active" id="button" type="button" onclick="mark_today()">📚</button></div>
+            <div><button class="main-button main-button-active" id="markButton" type="button">📚</button></div>
             <br>
             <span id="until-text"></span><span id="demo"></span>
             <div class="selector">
@@ -172,7 +178,7 @@
         }
 
         function get_leaderboard() {
-            fetch(`${baseUrl}/leaderboard`,  {
+            fetch(`${baseUrl}/leaderboard?type=all`,  {
                 headers: {
                     'Authorization' : 'Bearer ' + token
                 },
@@ -181,29 +187,30 @@
                     if (r.ok) {
                         r.json().then((j) => {
 
-                            const toplist = j["leaderboard"].map((e) => {
+                            const toplist_ongoing = format_leaderboard(j["leaderboard_ongoing"])
+                            const toplist_overall = format_leaderboard(j["leaderboard_overall"])
 
 
-                                let topUser
-                                if (e.user === user) {
-                                    topUser = `<b class="leaderboard-you">${e.user}</b>`
-                                } else {
-                                    topUser = e.user
-                                }
-
-                                return `${e.rank}. ${topUser} (x${e.streak}) <br>`
-                            }).join("")
-
-
-                            document.getElementById("sidebar-leaderboard").innerHTML = toplist
+                            document.getElementById("sidebar-leaderboard-ongoing").innerHTML = toplist_ongoing
+                            document.getElementById("sidebar-leaderboard-overall").innerHTML = toplist_overall
                         })
                     }
                 })
         }
+
+        function format_leaderboard(entries) {
+            return entries.map((e) => {
+                let topUser
+                if (e.user === user) {
+                    topUser = `<b class="leaderboard-you">${e.user}</b>`
+                } else {
+                    topUser = e.user
+                }
+                return `${e.rank}. ${topUser} (x${e.streak}) <br>`
+            }).join("")
+        }
         
         function get_streak() {
-
-            console.log("got past")
 
             fetch(`${baseUrl}/today/verbose?user=${user}`,  {
             headers: {
@@ -216,7 +223,7 @@
                 response.json().then((res) => {
                     count = res['streak']
                     document.getElementById("streak").innerText = count
-                    const button = document.getElementById("button")
+                    const button = document.getElementById("markButton")
                     const disabled = (res['today'])
 
                     if (count > 7) {
@@ -284,6 +291,25 @@
             hideAllSidebars()
         })
 
+        document.getElementById("showApi").addEventListener("click", () => {
+            showApi()
+        })
+
+        document.getElementById("showAbout").addEventListener("click", () => {
+            showAbout()
+        })
+
+        document.getElementById("showLeaderboard").addEventListener("click", () => {
+            leaderboard()
+        })
+
+        document.getElementById("markButton").addEventListener("click", () => {
+            mark_today()
+        })
+
+        document.getElementById("logout").addEventListener("logout", () => {
+            logout()
+        })
 
 
         // Set the date we're counting down to

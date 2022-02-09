@@ -38,7 +38,7 @@ async def mark_today_read_login():
 
     valid = await db_client.verify_login(username, password)
     if valid:
-        return await mark_today(user_data["username"])
+        return await mark_today_read(user_data["username"])
     return error_response("unauthorized")
 
 @app.route("/api/mark-with-token", methods=['GET', 'POST'])
@@ -52,7 +52,7 @@ async def mark_today_read_token():
 
     if auth_token:
         user_data = await db_client.verify_token(auth_token)
-        return await mark_today(user_data["username"])
+        return await mark_today_read(user_data["username"])
     return error_response("unauthorized")
 
 async def mark_today_read(username):
@@ -91,16 +91,25 @@ async def get_today_status_verbose():
 
 @app.route("/api/leaderboard", methods=['GET'])
 async def get_leaderboard():
+    leaderboard_type = request.args.get('type')
     limit_req = request.args.get('limit')
     limit = 5
     if limit_req != None and limit_req.isnumeric():
         limit = int(limit_req)
 
-    toplist = await db_client.leaderboard(limit)
-    return {
-        "leaderboard": toplist
-    }
-
+    if leaderboard_type in ["overall", "alltime"]:
+        return {
+            "leaderboard_overall": await db_client.leaderboard_overall(limit)
+        }
+    elif leaderboard_type in ["ongoing", "current"]:
+        return {
+            "leaderboard_ongoing": await db_client.leaderboard_ongoing(limit)
+        }
+    else:
+        return {
+            "leaderboard_ongoing" : await db_client.leaderboard_ongoing(limit),
+            "leaderboard_overall" : await db_client.leaderboard_overall(limit)
+        }
 
 @app.route("/api/history", methods=['GET'])
 async def get_history():
