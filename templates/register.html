@@ -103,7 +103,7 @@
                     window.location.replace("/");
                 }).catch((e) => console.log("didnt get text", e));
             } else {
-                document.getElementById("loginerror").innerText = "existing username"
+                document.getElementById("loginerror").innerText = response.text()
             }
             }).catch((e) => console.log("error", e));
     }

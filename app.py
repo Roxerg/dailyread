@@ -134,10 +134,12 @@ async def register():
     username, password = get_credentials()
 
     if not login_valid(username, password):
-        return error_response(status=400)
+        return error_response("credentials not valid", status=400)
 
-
-    return await db_client.register(username, password)
+    if await db_client.register(username, password):
+        return "registration successful"
+    else:
+        return error_response("username taken", status=409)
 
 @app.route("/api/login", methods=['GET', 'POST'])
 async def login():

@@ -164,7 +164,9 @@ async def register(username, password):
 
     await conn.close()
 
-    return status
+    res = status.split(" ")
+
+    return res[-1] == '1'
 
 async def leaderboard_overall(limit):
 
