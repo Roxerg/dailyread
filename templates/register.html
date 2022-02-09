@@ -103,7 +103,9 @@
                     window.location.replace("/");
                 }).catch((e) => console.log("didnt get text", e));
             } else {
-                document.getElementById("loginerror").innerText = response.text()
+                response.text().then((err) => {
+                    document.getElementById("loginerror").innerText = err
+                })
             }
             }).catch((e) => console.log("error", e));
     }
