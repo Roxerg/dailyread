@@ -57,7 +57,7 @@
 
     <div class="container">
         <div style="width: 98vw;">
-            <div style="float: right;"><span class="username">username loading</span> | <a href="/" id="logout">logout</a></div>
+            <div style="float: right;"><span class="username">username loading</span> | <a id="logout">logout</a></div>
             <div style="margin-left: 3px; float: left;">
                 <span>
                 <a id="showAbout"><b>? </b></a>
@@ -133,6 +133,8 @@
 
             sessionStorage.removeItem('readertoken');
             sessionStorage.removeItem('readeruser');
+
+            window.location.replace("/");
         }
 
         if (!token) {
