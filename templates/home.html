@@ -78,6 +78,9 @@
             <div><button class="main-button main-button-active" id="markButton" type="button">📚</button></div>
             <br>
             <span id="until-text"></span><span id="demo"></span>
+            <div id="history-container">
+                <div id="history-display"></div>
+            </div>
             <div class="selector">
                 <div>
                     <b>Coming Soon</b>
@@ -252,6 +255,55 @@
             }).catch((e) => console.log("error", e));
         }
 
+        Date.prototype.addDay = function() {
+            var date = new Date(this.valueOf());
+            date.setDate(date.getDate() + 1);
+            return date;
+        }
+
+        function display_history() {
+
+            fetch(`${baseUrl}/history?user=${user}`,  {
+            headers: {
+                'Authorization' : 'Bearer ' + token
+            },
+            method: 'GET',
+            mode: 'cors',
+            }).then((response) => {
+            if (response.ok) {
+                response.json().then((res) => {
+                    const days = res.history
+                    console.log(res)
+            
+                const dayObjs = days.map((e) => {
+                    const d = e.day.split('-')
+                    return new Date(d[2],parseInt(d[1])-1,d[0])
+                }).sort((a,b) => {
+                    return a-b
+                }).reverse()
+
+                let currDate = dayObjs[dayObjs.length-1]
+
+                while(dayObjs.length > 0) {
+                    const d = document.createElement('div')
+                    d.classList.add('circle')
+                    if (dayObjs[dayObjs.length-1].getTime() === currDate.getTime()) {
+                        d.classList.add('did-read')
+                        const x = dayObjs.pop()
+                    } else {
+                        d.classList.add('did-not-read')
+                    }
+                    currDate = currDate.addDay()
+                    document.getElementById('history-display').appendChild(d)
+                }
+                    })
+            } else {
+                document.getElementById('history-display').innerHTML = "failed to load history :("
+            }
+            }).catch((e) => console.log("error", e))
+            
+        }
+
         let gettingStreak = false
         function mark_today() {
 
@@ -271,7 +323,7 @@
             }).then((response) => {
             if (response.ok) {
                 response.text().then((txt) => {
-                    const button = document.getElementById("button")
+                    const button = document.getElementById("markButton")
                     button.disabled = true
                     document.getElementById("streak").innerText = count + 1
                     button.classList.toggle('main-button-active')
@@ -288,6 +340,7 @@
 
         get_streak()
         get_leaderboard()
+        display_history()
 
         document.getElementById("main-stuff").addEventListener("click", () => {
             hideAllSidebars()
