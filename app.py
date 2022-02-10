@@ -127,7 +127,7 @@ async def get_history():
         "day": x["day"].strftime('%d-%m-%Y'),
         "streak" : x["streak"],
     }, streak))
-    return str(response)
+    return { "history": response }
 
 @app.route("/api/register", methods=['POST'])
 async def register():
