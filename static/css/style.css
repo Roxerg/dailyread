@@ -213,3 +213,32 @@ button {
 .selected {
     font-size: 90%;
 }
+
+
+/* HISTORY */
+
+#history-container {
+    width: 40vw;
+    margin:auto;
+}
+#history-display {
+    display: flex;
+    justify-content: center;
+    flex-wrap:wrap;
+}
+.circle {
+    flex: none;
+    border-radius: 50%;
+    width: 1rem;
+    height: 1rem;
+    margin-left: 3px;
+    margin-top:3px;
+}
+
+.did-read {
+    background-color: #6eb872;
+}
+
+.did-not-read {
+    background-color: rgba(128, 128, 128, 0.363);
+}
