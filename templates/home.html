@@ -75,26 +75,37 @@
                 <div class="streak-number" id="streak">???</div>       
                 <br>
             </div>
-            <div><button class="main-button main-button-active" id="markButton" type="button">📚</button></div>
-            <br>
-            <span id="until-text"></span><span id="demo"></span>
+
+            <div id="mark-container" class="mark-container">
+                <div class="mark-advanced-container">
+
+                    <div>
+                        <button class="main-button main-button-active" id="markButton" type="button">📚</button>
+                        <div id="advanced-button" class="advanced-button"><a>Advanced</a></div>
+                    </div>
+
+                    <div id="advanced-options" class="advanced-form-fields invisible">
+
+                        <div class="advanced-field-thingy advanced-oneline-form">
+                            <input placeholder="author" type="text" class="advanced-author">
+                            <input placeholder="title"  type="text" class="advanced-title">
+                        </div>
+
+                        <div class="advanced-field-thingy textform-flex">
+                            <textarea placeholder=" notes" class="flex-full" maxlength="600"></textarea>
+                        </div>
+
+                        <div class="advanced-field-thingy">
+                            <div class="checkbox-container"><input type="checkbox">  finished reading</div>
+                        </div>
+
+                    </div>
+
+                </div>
+                
+            </div>
             <div id="history-container">
                 <div id="history-display"></div>
-            </div>
-            <div class="selector">
-                <div>
-                    <b>Coming Soon</b>
-                </div>
-                <div>
-                    Select Activity
-                </div>
-                <div class="comingsoon">
-                    <span><</span>
-                    <span class="unselected">🎸</span>
-                    <span class="selected">📚</span>
-                    <span class="unselected">🥗</span>
-                    <span>></span>
-                </div>
             </div>
         </div>
     </div>
@@ -244,8 +255,6 @@
                         button.classList.toggle('main-button-marked')
 
                         clickedToday = true
-
-                        document.getElementById("until-text").innerText = "Time until next check: "
                     }
                     
                 })
@@ -338,6 +347,20 @@
 
         }
 
+        let advanced_toggled = false
+        function toggle_advanced() {
+
+            console.log(advanced_toggled)
+
+            setTimeout(() => document.getElementById("advanced-options").classList.toggle("invisible"), advanced_toggled ? 0 : 100);
+            setTimeout(() => document.getElementById("mark-container").classList.toggle("mark-advanced-container-extended"), advanced_toggled ? 0 : 0);
+            setTimeout(() => document.querySelectorAll(".advanced-field-thingy").forEach((e) => {
+                e.classList.toggle("advanced-field-thingy-toggled")
+            }), 200)
+
+            advanced_toggled = !advanced_toggled
+        }
+
         get_streak()
         get_leaderboard()
         display_history()
@@ -366,41 +389,9 @@
             logout()
         })
 
-
-        // Set the date we're counting down to
-const today = new Date();
-let tomorrow = today.setDate(today.getDate() + 1)
-tomorrow = new Date(`${today.getFullYear()}-${today.getMonth()+1}-${today.getDate()}`)
-
-let countDownDate = tomorrow.getTime()
-// Update the count down every 1 second
-let x = setInterval(function() {
-
-  // Get today's date and time
-  let now = new Date().getTime();
-
-  // Find the distance between now and the count down date
-  let distance = countDownDate - now;
-
-  // Time calculations for days, hours, minutes and seconds
-  let hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-  let minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-  let seconds = Math.floor((distance % (1000 * 60)) / 1000);
-
-  // Display the result in the element with id="demo"
-  if (clickedToday) {
-    document.getElementById("demo").innerHTML = hours + ":" + minutes  + ":" + seconds;
-    document.getElementById("demo").innerHTML = `${hours}:${minutes >= 10 ? minutes : '0' + minutes}:${seconds >= 10 ? seconds : '0' + seconds}`;
-  }
-  
-
-  // If the count down is finished, write some text
-  if (distance < 0) {
-    clearInterval(x);
-    document.getElementById("demo").innerHTML = "Refresh";
-    window.location.replace("/home");
-  }
-}, 1000);
+        document.getElementById("advanced-button").addEventListener("click", () => {
+            toggle_advanced()
+        })
         
 </script>
 </html>

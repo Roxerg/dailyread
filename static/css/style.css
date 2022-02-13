@@ -44,15 +44,22 @@ a:hover {
 }
 
 input {
+    text-align: center;
+}
+input, textarea {
     background: #212121;
     color: white;
     border-style: solid;
     border-color:black;
-    text-align: center;
     border-width: 1px;
     border-radius: 5px;
     margin-bottom: 10px;
 }
+textarea {
+
+    width: auto;
+}
+
 button {
     background-color:#2196f3;
     border-style:none;
@@ -97,6 +104,97 @@ button {
     font-size: 12vh;
 }
 
+/* MARK CONTAINER */ 
+
+.mark-container {
+    background-color: rgba(128, 128, 128, 0.363);
+    /* max-width: fit-content; */
+    width: 10vw;
+
+    margin-left: auto;
+    margin-right: auto;
+    margin-bottom: 2vh;
+
+    padding-top: 4vh;
+    padding-bottom: 4vh;
+    padding-left: 6vh;
+    padding-right: 6vh;
+
+    border-top-left-radius: 5vh;
+    border-top-right-radius: 5vh;
+    border-bottom-left-radius: 5vh;
+    border-bottom-right-radius: 5vh;
+
+    transition: all 1s;
+}
+
+.checkbox-container {
+    background-color: #1b1b1b;
+    width:fit-content;
+    margin:auto;
+    padding-left: 5px;
+    padding-right: 10px;
+    padding-top: 5px;
+    border-radius: 10px;
+}
+
+.advanced-form-fields {
+    justify-content: left;
+    width: 100%;
+    opacity: 100%;
+}
+
+.advanced-oneline-form {
+    width: 100%;
+    display: flex;
+    gap: 4px;
+}
+.textform-flex {
+    height: auto;
+    display: flex;
+}
+
+.advanced-author {
+    flex-grow: 1;
+}
+.advanced-title {
+    flex-grow: 3;
+}
+.flex-full {
+    flex-grow: 1;
+}
+
+.mark-advanced-container {
+    display: flex;
+    gap: 2vw;
+    justify-content: center;
+    align-items: center;
+    transition: all 1s;
+}
+
+.mark-advanced-container-extended {
+    width: 50vw;
+}
+
+.advanced-field-thingy {
+    opacity: 0%;
+    transition: all 1s;
+}
+
+.advanced-field-thingy-toggled {
+    opacity: 100%;
+}
+
+.advanced-button {
+    margin-top: 4vh;
+}
+
+.advanced-form {
+    display: flex;
+    justify-content: center;
+    flex-wrap:wrap;
+}
+
 /* STREAK */
 
     
@@ -115,6 +213,11 @@ button {
 }
 .hidden {
     visibility: hidden;
+}
+
+.invisible {
+    /* visibility: hidden; */
+    display: none;
 }
 
 @keyframes flames {
