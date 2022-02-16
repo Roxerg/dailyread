@@ -12,6 +12,21 @@ body {
     background: #1b1b1b;
     color: #ffffff;
     overflow-y: scroll;
+    overflow-x: hidden;
+}
+
+.blurb {
+    color: grey;
+    font-size: 2vh;
+    transition: all 2s;
+}
+
+.faded-blurb {
+    opacity: 0%;
+}
+
+.no-display {
+    display: none;
 }
 
 .container {
@@ -47,6 +62,8 @@ input {
     text-align: center;
 }
 input, textarea {
+    width: calc(100%);
+    float: left;
     background: #212121;
     color: white;
     border-style: solid;
@@ -54,9 +71,10 @@ input, textarea {
     border-width: 1px;
     border-radius: 5px;
     margin-bottom: 10px;
+    box-sizing: border-box;
 }
 textarea {
-
+    box-sizing: border-box;
     width: auto;
 }
 
@@ -106,10 +124,10 @@ button {
 
 /* MARK CONTAINER */ 
 
-.mark-container {
+#mark-container {
     background-color: rgba(128, 128, 128, 0.363);
     /* max-width: fit-content; */
-    width: 10vw;
+    width: fit-content;
 
     margin-left: auto;
     margin-right: auto;
@@ -138,16 +156,19 @@ button {
     border-radius: 10px;
 }
 
-.advanced-form-fields {
+#advanced-options {
     justify-content: left;
-    width: 100%;
-    opacity: 100%;
+    height: 100%;
+    transition: all 1s;
 }
 
 .advanced-oneline-form {
-    width: 100%;
-    display: flex;
-    gap: 4px;
+    /* width: 100%; */
+    display: grid;
+    grid-template-columns: [start] 40% [mid] auto [end];
+    column-gap: 8px;
+    height: 6vh;
+    transform: all 1s;
 }
 .textform-flex {
     height: auto;
@@ -155,25 +176,31 @@ button {
 }
 
 .advanced-author {
-    flex-grow: 1;
+    grid-column-end: mid;
 }
 .advanced-title {
-    flex-grow: 3;
+    grid-column-start: mid;
 }
 .flex-full {
     flex-grow: 1;
 }
 
-.mark-advanced-container {
-    display: flex;
-    gap: 2vw;
+#mark-advanced-container {
+    display: flex;   
     justify-content: center;
     align-items: center;
     transition: all 1s;
 }
 
-.mark-advanced-container-extended {
-    width: 50vw;
+.gapped {
+    gap: 2vw;
+}
+
+.no-width {
+    width: 0px;
+}
+.full-width {
+    width: 100%;
 }
 
 .advanced-field-thingy {
@@ -215,11 +242,6 @@ button {
     visibility: hidden;
 }
 
-.invisible {
-    /* visibility: hidden; */
-    display: none;
-}
-
 @keyframes flames {
     0% { opacity: 0.75; transform: rotate(-25deg);scale: 1;}
     25% { opacity: 1; transform: rotate(0deg);scale: 1.5;}
@@ -240,25 +262,23 @@ button {
 }
 
 .dongle-about {
-    margin-left: calc(0px + -0.1vw);
     width: 15px;
 }
-.dongle-leaderboard {
+/* .dongle-leaderboard {
     margin-left: calc(5px + 1vw);
-}
+} */
 .dongle-api {
-    margin-left: calc(106px + 1vw);
     width: 32px;
 }
 
-#sidebar-about {
-    margin-left: calc(0px + -0.1vw);
+#sidebar-about, .dongle-about {
+    margin-left: calc(0.0rem);
 }
-#sidebar-leaderboard {
-    margin-left: calc(5px + 1vw);
+#sidebar-leaderboard, .dongle-leaderboard {
+    margin-left: calc(1.5rem);
 }
-#sidebar-api {
-    margin-left: calc(106px + 1vw);
+#sidebar-api, .dongle-api {
+    margin-left: calc(7.2rem);
 }
 
 

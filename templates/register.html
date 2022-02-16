@@ -9,35 +9,41 @@
 
 
 <body>
-    <iframe name="dummyframe" id="dummyframe" style="display: none;"></iframe>
     <div class="container">
         <div class="item">
             <div>
                 <div class="title">read?.(today)</div>
-                <form id="login" target="dummyframe">  
-                        <input class="padded" id="username" type="text" placeholder="user" name="username" required>  
+                <form id="login" method="POST">  
+                        <input class="input-field padded" id="username" type="text" placeholder="user" name="username" required>  
                         <br>
-                        <input class="padded" id="password" type="password" placeholder="pass" name="password" required>  
+                        <input class="input-field padded" id="password" type="password" placeholder="pass" name="password" required>  
                         
                         <br>
                         <span class="blurb">
-                            This application is not super secure - <br>
-                            <b>DO NOT</b> use a password that is used elsewhere.
+                            this application is not super secure:<br>
+                            <b>better not</b> use a password 
                             <br>
-                            If you forgot your password you will need to contact the dev.
+                            that is used elsewhere.
                             <br>
-                            Only data being stored is your login info, and timestamps of your daily click.
+                            <br>
+                            no password reset
+                            <br>
+                            ... yet.
+                            <br>
+                            <br>
+                            only directly entered data
+                            <br> 
+                            is being collected / stored
                             <br>
                         </span>
                         <br>
                         <button class="padded" type="submit">register</button>   
 
                         <br>
-                        <span style="color:red" id="loginerror"></span>
+                        <span style="color:rgb(255, 187, 0)" id="loginerror"></span>
                         <br>
-
-                        <span><a href="/">back</a></span>
                 </form>
+                <span><a href="/">back</a></span>
             </div>
         </div>
     </div>     
@@ -48,23 +54,8 @@
 
 
 <script>
-    const baseUrl = "{{ api_url }}"
 
-    let rememberMe = true
-    let mainPage = "/home"
-    // Get data
-    let token = localStorage.getItem('readertoken');
-
-    if (token) {
-        window.location.replace(mainPage);
-    } else {
-        token = sessionStorage.getItem('readertoken');
-        if(token) {
-            window.location.replace(mainPage);
-        }
-    }
-
-    function submit() {
+    function validate() {
 
         document.getElementById("loginerror").innerText = ''
 
@@ -75,12 +66,12 @@
         let err = ''
 
         if (user.search(re) !== -1 || pass.search(re) !== -1) {
-            err = 'username and/or password contains forbidden symbols'
+            err = 'username and/or password contain forbidden symbols'
         }
 
         if (user.length > 32 || pass.length > 32) {
             err = 'username and/or password too long'
-        } else if (user.length < 3 || pass.length < 3) {
+        } else if ((user.length < 3 && user.length !== 0) || (pass.length < 3 && pass.length !== 0)) {
             err = 'username and/or password too short'
         }
 
@@ -88,37 +79,8 @@
             document.getElementById("loginerror").innerText = err
             return
         }
-
-
-        const creds = { "user" : user, "pass" : pass }
-
-        fetch(`${baseUrl}/register`,  {
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(creds),
-            method: 'POST',
-            mode: 'cors',
-            }).then((response) => {
-            if (response.ok) {
-                response.text().then(function(text) {
-                    window.location.replace("/");
-                }).catch((e) => console.log("didnt get text", e));
-            } else {
-                response.text().then((err) => {
-                    document.getElementById("loginerror").innerText = err
-                })
-            }
-            }).catch((e) => console.log("error", e));
     }
 
-    document.getElementById('login').onsubmit = submit;
+    document.getElementById('login').addEventListener('change', () => validate());
 </script>
-
-<style>
-    .blurb {
-        color: grey;
-        font-size: 2vh;
-    }
-</style>
 </html>

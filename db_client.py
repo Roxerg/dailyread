@@ -1,5 +1,3 @@
-import asyncpg
-import asyncio
 import bcrypt
 
 import string
@@ -7,21 +5,32 @@ import random
 
 from datetime import datetime
 
+import psycopg2
+
 import os
 DB_URI = os.environ['DATABASE_URL']
 USERNAME = os.environ['READSTATS_USER']
 PASSWORD = os.environ['READSTATS_PASS']
 
-async def get_connection():
-    return await asyncpg.connect(dsn=DB_URI)        
+conn = None
 
-async def init_db():
+def get_connection():
+    global conn
+    if conn.closed != 0:
+        print("REINITIALIZED DB >:(")
+        conn = init_connection()
+        return conn
+    else:
+        return conn    
 
-    
+def init_connection():
+    return psycopg2.connect(dsn=DB_URI)     
 
-    conn = await get_connection()
+def init_db():
+    conn = get_connection()
+    cur = conn.cursor()
 
-    await conn.execute(
+    cur.execute(
         '''
         CREATE TABLE IF NOT EXISTS users(
             id SERIAL PRIMARY KEY,
@@ -31,7 +40,7 @@ async def init_db():
         '''
     )
 
-    await conn.execute(
+    cur.execute(
         '''
         CREATE TABLE IF NOT EXISTS sessions(
             user_id INT,
@@ -42,16 +51,44 @@ async def init_db():
         '''
     )
 
-    await conn.execute(
+    cur.execute(
         '''
         CREATE TABLE IF NOT EXISTS history(
             day DATE DEFAULT CURRENT_DATE,
             streak INT,
             user_id INT REFERENCES users (id),
+            note VARCHAR,
+            page INT,
+            book_id INT,
             PRIMARY KEY (day, user_id)
         );
         '''
     ) 
+
+    cur.execute(
+        '''
+        CREATE TABLE IF NOT EXISTS history(
+            book_id SERIAL,
+            author VARCHAR,
+            title VARCHAR, 
+            pages VARCHAR,
+            isbn VARCHAR(20),
+            PRIMARY KEY (day, user_id)
+        );
+        '''
+    ) 
+
+    cur.execute('''
+        ALTER TABLE history ADD COLUMN IF NOT EXISTS note VARCHAR
+    ''')
+
+    cur.execute('''
+        ALTER TABLE history ADD COLUMN IF NOT EXISTS book_id INT
+    ''')
+
+    cur.execute('''
+        ALTER TABLE history ADD COLUMN IF NOT EXISTS page INT
+    ''')
 
     username = USERNAME
 
@@ -59,144 +96,260 @@ async def init_db():
     passwordHash = bcrypt.hashpw(str.encode(PASSWORD), salt)
 
     
-    await conn.execute("INSERT INTO users (username, passwordHash) VALUES ($1, $2) ON CONFLICT DO NOTHING;", username, passwordHash.decode())
-    await conn.close()
+    cur.execute("INSERT INTO users (username, passwordHash) VALUES (%s, %s) ON CONFLICT DO NOTHING;", [username, passwordHash.decode()] )
+    
+    conn.commit()
+
+    cur.close()
+    
 
 
-async def mark_today(username):
-    conn = await get_connection()
+def mark_today(username, advanced_data=None):
+    conn = get_connection()
+    cur = conn.cursor()
 
     streak = 0
     user_id = None
-    streak_res = await conn.fetch("SELECT streak, user_id FROM history JOIN users ON user_id=id WHERE username=$1 AND day=CURRENT_DATE-1;", username)
+    
+    cur.execute("SELECT streak, user_id FROM history JOIN users ON user_id=id WHERE username=%s AND day=CURRENT_DATE-1;", [username])
+    streak_res = cur.fetchone()
 
-    if len(streak_res) > 0:
-        streak = streak_res[0]['streak']
-        user_id = streak_res[0]['user_id']
+    if streak_res != None:
+        streak = streak_res[0]
+        user_id = streak_res[1]
     else:
-        user_res = await conn.fetch("SELECT id FROM users WHERE username=$1", username)
-        user_id = user_res[0]['id']
-    
-    await conn.execute("INSERT INTO history (day, streak, user_id) VALUES (CURRENT_DATE, $1, $2) ON CONFLICT DO NOTHING", streak+1, user_id)
-    
-    streak_res = await conn.fetch("SELECT streak, user_id FROM history JOIN users ON user_id=id WHERE username=$1 AND day=CURRENT_DATE-1;", username)
-    
-    await conn.close()
+        cur.execute("SELECT id FROM users WHERE username=%s", [username])
+        user_res = cur.fetchone()
+        user_id = user_res[0]
 
-    if (len(streak_res) > 0):
-        if (streak_res[0]['streak'] == streak):
+    note, author, title = None, None, None
+    if advanced_data:
+        note = advanced_data.get("notes")
+        author = advanced_data.get("author")
+        title = advanced_data.get("title")
+    
+    cur.execute("INSERT INTO history (day, streak, user_id, note) VALUES (CURRENT_DATE, %s, %s, %s) ON CONFLICT (day, user_id) DO UPDATE SET note = excluded.note", [streak+1, user_id, note])
+    conn.commit()
+
+    cur.execute("SELECT streak, user_id, note FROM history JOIN users ON user_id=id WHERE username=%s AND day=CURRENT_DATE-1;", [username])
+    streak_res = cur.fetchone()
+
+    cur.close()
+    
+
+    if streak_res != None:
+        print(streak_res[2])
+        if (streak_res[0] == streak):
             return False
 
     return True
     
-async def get_today(username):
-    conn = await get_connection()
+def get_today(username):
+    conn = get_connection()
+    cur = conn.cursor()
 
-    res = await conn.fetch("SELECT streak, day FROM history JOIN users ON user_id=id WHERE username=$1 AND day >= CURRENT_DATE - INTEGER '1' ORDER BY day DESC", username)
+    cur.execute("SELECT streak, day, note FROM history JOIN users ON user_id=id WHERE username=%s AND day >= CURRENT_DATE - INTEGER '1' ORDER BY day DESC", [username])
+    res = cur.fetchone()
 
-    if len(res) > 0:
+    cur.close()
+    
+
+    if res != None:
         return {
-            "streak": res[0]['streak'],
-            "today" : datetime.today().strftime('%Y-%m-%d') == res[0]['day'].strftime('%Y-%m-%d'),
+            "streak": res[0],
+            "today" : datetime.today().strftime('%Y-%m-%d') == res[1].strftime('%Y-%m-%d'),
+            "note" : res[2],
         }
     else: 
         return None
 
-async def verify_login(username, password):
-    conn = await get_connection()
+def get_user_by_id(user_id):
+    conn = get_connection()
+    cur = conn.cursor()
 
-    res = await conn.fetch("SELECT * FROM users WHERE username=$1", username)
-    if len(res) == 0:
+    cur.execute("SELECT id, username, passwordHash FROM users WHERE id=%s LIMIT 1", [user_id])
+    res = cur.fetchone()
+
+    if res != None:
+        return res
+    else:
+        return None
+
+def get_token_by_id(user_id):
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("SELECT token, user_id FROM sessions WHERE user_id=%s", [user_id])
+    res = cur.fetchone()
+
+    if res != None:
+        return res[0]
+    else:
+        return None
+
+
+def verify_login(username, password):
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("SELECT passwordHash, id FROM users WHERE username=%s", [username])
+    res = cur.fetchone()
+
+    if res == None:
         return False
-    user = res[0]
-    passwordHash = str.encode(user['passwordhash'])
+    user = res
+
+    passwordHash = str.encode(user[0])
 
     # ok fine i'll do the bloody token. but lazily.
 
     if not bcrypt.checkpw(str.encode(password), passwordHash):
-        await conn.close()
+        
         return None
     
     token = ''.join(random.SystemRandom().choice(string.ascii_letters + string.digits) for _ in range(32))
 
-    await write_token(conn, user["id"], token)
+    write_token(conn, cur, user[1], token)
 
-    await conn.close()
+    cur.close()
+    
     return token
 
-async def clean_tokens(conn):
-    await conn.execute('DELETE FROM sessions WHERE CURRENT_DATE - timestamp::date > 30;')
+def verify_login_returning_data(username, password):
+    conn = get_connection()
+    cur = conn.cursor()
 
-async def write_token(conn, user_id, token):
-    await clean_tokens(conn)
-    await conn.execute('INSERT INTO sessions (user_id, token, timestamp) VALUES ($1, $2, NOW())', user_id, token)
+    cur.execute("SELECT passwordHash, id FROM users WHERE username=%s", [username])
+    res = cur.fetchone()
 
-async def verify_token(token):
+    if res == None:
+        return False
+    user = res
 
-    conn = await get_connection()
+    passwordHash = str.encode(user[0])
+
+    # ok fine i'll do the bloody token. but lazily.
+
+    if not bcrypt.checkpw(str.encode(password), passwordHash):
+        cur.close()
+        
+        return None
     
-    await clean_tokens(conn)
-    res = await conn.fetch('SELECT username, user_id FROM sessions JOIN users ON user_id=id WHERE token=$1', token)
-    await conn.close()
-    if len(res) > 0:
+    token = ''.join(random.SystemRandom().choice(string.ascii_letters + string.digits) for _ in range(32))
+
+    write_token(conn, cur, user[1], token)
+
+    cur.close()
+    
+
+    return {
+        "passwordhash" : user[0],
+        "id" : user[1],
+        "token" : token,
+        "username" : username,
+    }
+
+
+def clean_tokens(conn, cur):
+    cur.execute('DELETE FROM sessions WHERE CURRENT_DATE - timestamp::date > 30;')
+    conn.commit()
+
+def write_token(conn, cur, user_id, token):
+    cur.execute('INSERT INTO sessions (user_id, token, timestamp) VALUES (%s, %s, NOW())', [user_id, token])
+    clean_tokens(conn, cur)
+
+def verify_token(token):
+
+    conn = get_connection()
+    cur = conn.cursor()
+    
+    clean_tokens(conn, cur)
+
+    cur.execute('SELECT username, user_id FROM sessions JOIN users ON user_id=id WHERE token=%s', [token])
+    res = cur.fetchone()
+
+    cur.close()
+    
+
+    if res != None:
         return {
-            "username" : res[0]["username"],
-            "user_id" : res[0]["user_id"]
+            "username" : res[0],
+            "user_id" : res[1],
         }
     else:
         return None
 
-async def logout(user, token):
+def logout(user, token):
 
-    conn = await get_connection()
+    conn = get_connection()
+    cur = conn.cursor()
 
-    await clean_tokens(conn)
-    await conn.execute("DELETE FROM sessions S USING users U WHERE S.user_id=U.id AND U.username=$1 AND S.token=$2", user, token)
 
-async def register(username, password):
+    clean_tokens(conn, cur)
 
-    conn = await get_connection()
+    cur.execute("DELETE FROM sessions S USING users U WHERE S.user_id=U.id AND U.username=%s AND S.token=%s", [user, token])
+    conn.commit()
+
+    cur.close()
+    
+
+def register(username, password):
+
+    conn = get_connection()
+    cur = conn.cursor()
 
     salt = bcrypt.gensalt()
     passwordHash = bcrypt.hashpw(str.encode(password), salt)
+
+    status = cur.execute("INSERT INTO users (username, passwordHash) VALUES (%s, %s) ON CONFLICT DO NOTHING;", [username, passwordHash.decode()])
+
+    conn.commit()
+    cur.close()
     
-    status = await conn.execute("INSERT INTO users (username, passwordHash) VALUES ($1, $2) ON CONFLICT DO NOTHING;", username, passwordHash.decode())
 
-    await conn.close()
+    return True
 
-    res = status.split(" ")
+def leaderboard_overall(limit):
 
-    return res[-1] == '1'
+    conn = get_connection()
+    cur = conn.cursor()
 
-async def leaderboard_overall(limit):
+    cur.execute("SELECT username, MAX(streak) as topstreak FROM users JOIN history ON user_id=id GROUP BY username ORDER BY topstreak DESC LIMIT %s", [limit])
+    res = cur.fetchall()
 
-    conn = await get_connection()
-
-    res = await conn.fetch("SELECT username, MAX(streak) as topstreak FROM users JOIN history ON user_id=id GROUP BY username ORDER BY topstreak DESC LIMIT $1", limit)
-
-    res = [{"rank": i+1, "user" : x['username'], "streak": x['topstreak']} for i,x in enumerate(res)]
-    await conn.close()
-    return res
-
-async def leaderboard_ongoing(limit):
-
-    conn = await get_connection()
-
-    res = await conn.fetch("SELECT username, MAX(streak) as topstreak FROM users JOIN history ON user_id=id WHERE day >= CURRENT_DATE - INTEGER '1' GROUP BY username ORDER BY topstreak DESC LIMIT $1", limit)
-
-    res = [{"rank": i+1, "user" : x['username'], "streak": x['topstreak']} for i,x in enumerate(res)]
-    await conn.close()
-    return res
-
-async def userhistory(username):
-
-    conn = await get_connection()
-    res = await conn.fetch("SELECT streak, day FROM history JOIN users ON user_id=id WHERE username=$1 ORDER BY day DESC", username)
+    res = [{"rank": i+1, "user" : x[0], "streak": x[1]} for i,x in enumerate(res)]
     
-    await conn.close()
+    cur.close()
+    
+    return res
+
+def leaderboard_ongoing(limit):
+
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("SELECT username, MAX(streak) as topstreak FROM users JOIN history ON user_id=id WHERE day >= CURRENT_DATE - INTEGER '1' GROUP BY username ORDER BY topstreak DESC LIMIT %s", [limit])
+    res = cur.fetchall()
+
+    res = [{"rank": i+1, "user" : x[0], "streak": x[1]} for i,x in enumerate(res)]
+    
+    cur.close()
+    
+    return res
+
+def userhistory(username):
+
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("SELECT streak, day FROM history JOIN users ON user_id=id WHERE username=%s ORDER BY day DESC", [username])
+    res = cur.fetchall()
+
+    cur.close()
+    
     return res
 
 
 
-
-asyncio.run(init_db())
+conn = init_connection()
+init_db()

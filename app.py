@@ -3,231 +3,174 @@ import os
 from flask import Flask
 from flask import request
 from flask import render_template
+from flask import redirect
+
+from flask import url_for
 
 from flask_cors import CORS
 from flask import Response
 from flask import send_from_directory
 
+from flask_login import LoginManager
+from flask_login import login_user, logout_user
+from flask_login import current_user
+from flask_login import login_required
+
+import json
+
 import db_client
-import re
+
 
 API_URL = os.environ['API_URL']
+BASE_URL = os.environ['BASE_URL']
+
+login_manager = LoginManager()
 
 app = Flask(__name__)
+app.secret_key = os.environ['SECRET_KEY']
+
 CORS(app)
+login_manager.init_app(app)
+
 app.config['CORS_HEADERS'] = 'Content-Type'
 
 
 
 @app.route('/favicon.ico', methods=['GET'])
-async def favicon():
+def favicon():
     return send_from_directory(os.path.join(app.root_path, 'static'), 'favicon.ico')
 
 ### API ROUTES ###
 
+import api_controller
+import api_service
+import user_service
+from user_service import User
+
+from utils import *
+
+@login_manager.user_loader
+def load_user(user_id):
+    return user_service.get_user_by_id(user_id)
 
 @app.route("/api/mark", methods=['GET', 'POST'])
-async def mark_today_read_login():
-    if request.json == None:
-        return "body must contain login (user, pass)"
-
-    if not 'user' in request.json or not 'pass' in request.json:
-        return "body must contain login (user, pass)"
-
-    username, password = get_credentials()
-
-    valid = await db_client.verify_login(username, password)
-    if valid:
-        return await mark_today_read(user_data["username"])
-    return error_response("unauthorized")
+def mark_today_read_login_route():
+    return api_controller.mark_today_read_login_controller(request)
 
 @app.route("/api/mark-with-token", methods=['GET', 'POST'])
-async def mark_today_read_token():
-    auth_header = request.headers.get('Authorization')
-
-    if not auth_header:
-        return error_response("no auth")
-
-    auth_token = auth_header.split(" ")[1]
-
-    if auth_token:
-        user_data = await db_client.verify_token(auth_token)
-        return await mark_today_read(user_data["username"])
-    return error_response("unauthorized")
-
-async def mark_today_read(username):
-    if await db_client.mark_today(username):
-        return "marked today"
-    else:
-        return "already marked"
+def mark_today_read_token_route():
+    return api_controller.mark_today_read_token_controller(request)
 
 @app.route("/api/today", methods=['GET'])
-async def get_today_status():
-    username = request.args.get('user')
-    if username == None:
-        return error_response("user not specified", status=400)
-
-    res = await db_client.get_today(username)
-    return str(res["streak"])
-
+def get_today_status_route(): 
+    return api_controller.get_today_status_controller(request)
 
 @app.route("/api/today/verbose", methods=['GET'])
-async def get_today_status_verbose():
-    username = request.args.get('user')
-    if username == None:
-        return error_response("user not specified", status=400)
-
-    res = await db_client.get_today(username)
-    if res == None: 
-        return {
-            "today": False,
-            "streak": 0,
-        } 
-    else:
-        return {
-            "today": res['today'],
-            "streak": res['streak'],
-        }
+def get_today_status_verbose_route():
+    return api_controller.get_today_status_verbose_controller(request)
 
 @app.route("/api/leaderboard", methods=['GET'])
-async def get_leaderboard():
-    leaderboard_type = request.args.get('type')
-    limit_req = request.args.get('limit')
-    limit = 5
-    if limit_req != None and limit_req.isnumeric():
-        limit = int(limit_req)
-
-    if leaderboard_type in ["overall", "alltime"]:
-        return {
-            "leaderboard_overall": await db_client.leaderboard_overall(limit)
-        }
-    elif leaderboard_type in ["ongoing", "current"]:
-        return {
-            "leaderboard_ongoing": await db_client.leaderboard_ongoing(limit)
-        }
-    else:
-        return {
-            "leaderboard_ongoing" : await db_client.leaderboard_ongoing(limit),
-            "leaderboard_overall" : await db_client.leaderboard_overall(limit)
-        }
+def get_leaderboard():
+    return api_controller.get_leaderboard_controller(request)
 
 @app.route("/api/history", methods=['GET'])
-async def get_history():
-    username = request.args.get('user')
-
-    if not input_check(username):
-        return error_response(status=400)
-
-    if username == None:
-        return error_response("user not specified", status=400)
-
-    streak = await db_client.userhistory(username)
-    
-    response = list(map(lambda x : {
-        "day": x["day"].strftime('%d-%m-%Y'),
-        "streak" : x["streak"],
-    }, streak))
-    return { "history": response }
+def get_history():
+    return api_controller.get_history_controller(request)
 
 @app.route("/api/register", methods=['POST'])
-async def register():
-    username, password = get_credentials()
-
-    if not login_valid(username, password):
-        return error_response("credentials not valid", status=400)
-
-    if await db_client.register(username, password):
-        return "registration successful"
-    else:
-        return error_response("username taken", status=409)
+def register():
+    return api_controller.register_controller(request)
 
 @app.route("/api/login", methods=['GET', 'POST'])
-async def login():
-    username, password = get_credentials()
-
-    if not login_valid(username, password):
-        return error_response(status=400)
-
-    token = await db_client.verify_login(username, password)
-    if token:
-        return token
-    else:
-        return error_response("login failed, credentials not found")
+def login():
+    return api_controller.login_controller(request)
 
 @app.route("/api/logout", methods=['GET', 'POST'])
-async def logout():
-    auth_header = request.headers.get('Authorization')
-    username = request.args.get('user')
-
-    if not input_check(username):
-        return error_response(status=400)
-
-    if not auth_header:
-        return "failed"
-
-    auth_token = auth_header.split(" ")[1]
-
-    if auth_token:
-        await db_client.logout(username, auth_token)
-        return no_content_response()
-    return error_response("logout failed, token not deleted")
+def logout_api():
+    return api_controller.logout_controller(request)
 
 
 ### TEMPLATE ROUTES ###
 
-@app.route("/", methods=['GET'])
-async def landing_page():
-    auth_header = request.headers.get('Authorization')
+@app.route("/logout")
+@login_required
+def logout():
+    api_service.logout_service(current_user.username, current_user.api_token)
+    logout_user()
+    return redirect(url_for("landing_page"))
 
-    if not auth_header:
-        return await login_page()
+@app.route("/", methods=['GET', 'POST'])
+def landing_page():
 
-    auth_token = auth_header.split(" ")[1]
+    if not current_user or not current_user.is_authenticated:
+        return login_page()
 
-    if auth_token:
-        user_data = await db_client.verify_token(auth_token)
-        if user_data["username"]:
-            return await home_page()
-        else: 
-            return await login_page()
+    if current_user.username:
+        return redirect(url_for("home_page_route"))   # home_page(current_user.username)
+    else: 
+        return login_page()
 
-@app.route("/register", methods=['GET'])
-async def register_page():
-    return render_template("register.html", api_url=API_URL)
+@app.route("/register", methods=['GET', 'POST'])
+def register_page():
+
+    username, password = None, None
+
+    if request.form:
+        username = request.form['username']
+        password = request.form['password']
+
+    if username and password:
+        data = api_service.register_service(username, password)
         
+        return redirect(url_for("landing_page"), code=302)
 
-@app.route("/home", methods=['GET'])
-async def home_page():
-    return render_template("home.html", api_url=API_URL)
+    return render_template("register.html")
 
-@app.route("/login", methods=['GET'])
-async def login_page():
-    return render_template("login.html", api_url=API_URL)
+@app.route("/home",methods=['GET', 'POST'])
+@login_required
+def home_page_route():
+    streak = api_service.get_today_status_verbose_service(current_user.username)
+    history = api_service.get_history_service(current_user.username)
+    return render_template("home.html", 
+        api_url=API_URL,
+        api_token=current_user.api_token,
+        username=current_user.username,
+        streak=streak["streak"],
+        today=streak["today"],
+        history=json.dumps(history),
+        note=streak["note"],
+        )
+
+def home_page():
+    # streak=api_service.get_today_status_verbose_service(username)
+    return render_template("home.html", api_url=API_URL, streak=1, eee=current_user)
 
 
-### UTILS ###
+@app.route("/login", methods=['GET', 'POST'])
+def login_page():
 
-def login_valid(user, pwd):
-    return input_check(user) and input_check(pwd)
+    username, password, remember = None, None, False
 
-def input_check(input):
-    if len(input) < 3 or len(input) > 32:
-        return False
-    if re.search(r"[.,;()<>~#\/\\\"\'*$|\[\]\{\} &%]", input) != None:
-        return False
-    return True
+    if request.method == 'POST':
+        if request.form:
+            username = request.form['username']
+            password = request.form['password']
+            remember = request.form['remember'] == 'on'
 
-def no_content_response():
-    return Response(status=204)
+        string_valid = login_valid(username, password)
 
-def error_response(content=None, status=401, mimetype="application/json"):
-    if content != None:
-        return Response(content, status=status, mimetype=mimetype)
-    else:
-        return Response(status=status, mimetype=mimetype)
+        if string_valid:
+            data = api_service.login_with_data_service(username, password)
 
-def get_credentials():
-    username = request.json['user']
-    password = request.json['pass']
+            if data != None:
+                login_user(User(data["username"], data["passwordhash"], data["id"], data["token"]), remember=remember)
 
-    return username, password
+                return redirect(url_for("home_page_route"), code=302)
+            else:
+                return redirect(url_for("login_page", status="failed"))
+
+    error_msg = None
+    if request.args and request.args.get("status") == "failed":
+        error_msg = "incorrect credentials"
+
+    return render_template("login.html", error=error_msg)

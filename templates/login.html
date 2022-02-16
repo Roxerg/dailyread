@@ -9,23 +9,26 @@
 
 
 <body>
-    <iframe name="dummyframe" id="dummyframe" style="display: none;"></iframe>
     <div class="container">
         <div class="item">
             <div>
                 <div class="title">read?.(today)</div>
-                <form id="login" target="dummyframe">  
+                <form id="login" method="POST">  
                         <input class="input-field padded" id="username" type="text" placeholder="user" name="username" required>  
                         <br>
                         <input class="input-field padded" id="password" type="password" placeholder="pass" name="password" required>  
                         
                         <br>
-                        <input id="remember" class="padded" type="checkbox" onclick="rememberCheck()"> remember me   
+                        <input id="remember" class="padded" type="checkbox" name="remember" checked> remember me   
                         <br>
                         <button class="padded" type="submit">login</button>   
 
                         <br>
-                        <span style="color:rgb(255, 187, 0)" id="loginerror"></span>
+                        <span style="color:rgb(255, 187, 0)" id="loginerror">
+                            {% if error %}
+                                {{ error }}
+                            {% endif %}
+                        </span>
                         <br>
                         <span><a href="/register">register</a></span>
                 </form>
@@ -39,74 +42,11 @@
 
 
 <script>
-    let rememberMe = document.getElementById("remember").checked
-    let mainPage = "/home"
-
-    const baseUrl = "{{ api_url }}"
-
-    let initRemember = localStorage.getItem("remember")
-
-    if (initRemember === "true") {
-        if (!document.getElementById("remember").checked) {
-            document.getElementById("remember").click()
-            rememberMe = true
-        }
-    }
-    document.getElementById("remember").onclick = rememberCheck
-
-    function rememberCheck() {
-        rememberMe = !rememberMe
-        localStorage.removeItem('remember')
-        localStorage.setItem('remember', rememberMe)
-    }
-    
-    function submit() {
-
-        document.getElementById("loginerror").innerText = ''
-
-        const user = document.getElementById('username').value
-        const pass = document.getElementById('password').value
-
-
-        const creds = { "user" : user, "pass" : pass }
-        // https://read-daily.herokuapp.com/login
-
-        fetch(`${baseUrl}/login`,  {
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(creds),
-            method: 'POST',
-            mode: 'cors',
-            }).then((response) => {
-            if (response.ok) {
-                response.text().then(function(text) {
-                    if (text.length >= 16 && rememberMe) {
-                        console.log('saving', text, user, rememberMe)
-                        localStorage.setItem('remember', rememberMe)
-
-                        localStorage.setItem('readertoken', text);
-                        localStorage.setItem('readeruser', user);
-                        
-                        window.location.replace(mainPage);
-                    }
-                }).catch((e) => console.log("didnt get text", e));
-            } else {
-                document.getElementById("loginerror").innerText = "incorrect credentials"
-            }
-            }).catch((e) => console.log("error", e));
-    }
-
     document.addEventListener("keyup", () => {
             if (document.getElementById("loginerror").innerText.length > 0) {
                 document.getElementById("loginerror").innerText=""
             }
         })
 
-    // document.querySelectorAll('.input-field').forEach((e) => {
-        
-    // })
-
-    document.getElementById('login').onsubmit = submit;
 </script>
 </html>

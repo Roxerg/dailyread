@@ -39,7 +39,7 @@
         <div class="codeblock">
             curl \ <br>
               --request GET \ <br> 
-              --url <span class="codetext">'{{ api_url }}/today?user=<span class="username codetextalt"></span>'</span> <br>
+              --url <span class="codetext">'{{ api_url }}/today?user=<span class="username codetextalt">{{ username }}</span>'</span> <br>
         </div>
         To mark current day as complete, you need to pass login <br>
         details to the request:
@@ -49,16 +49,16 @@
             --url <span class="codetext">'{{ api_url }}/mark'</span> \ <br>
             --header <span class="codetext">'Content-Type: application/json'</span> \ <br>
             --data <span class="codetext">'{ <br>
-	            "user": "<span class="username codetextalt"></span>", <br>
+	            "user": "<span class="username codetextalt">{{ username }}</span>", <br>
 	            "pass": "<span class="codetextalt">%your password%</span>" <br>
             }' <br> </span>
         </div>
     </div>
 
     <div class="container">
-        <div style="width: 98vw;">
-            <div style="float: right;"><span class="username">username loading</span> | <a id="logout">logout</a></div>
-            <div style="margin-left: 3px; float: left;">
+        <div style="width: 100vw;">
+            <div style="margin-right: 1rem; float: right;"><span class="username">{{ username }}</span> | <a id="logout">logout</a></div>
+            <div style="margin-left: 1rem; float: left;">
                 <span>
                 <a id="showAbout"><b>? </b></a>
                 | 
@@ -71,32 +71,39 @@
         </div>
         <div id="main-stuff" class="item">
             <div class="streak">
-                <div class="fyah hidden">🔥</div><span> STREAK </span><div class="fyah hidden">🔥</div>
-                <div class="streak-number" id="streak">???</div>       
+                <div class="fyah hidden">🔥</div><span> STREAK</span><div class="fyah hidden">🔥</div>
+                <div class="streak-number" id="streak">{{ streak }}</div>       
                 <br>
             </div>
 
-            <div id="mark-container" class="mark-container">
-                <div class="mark-advanced-container">
+            <div id="mark-container">
+                <div id="mark-advanced-container">
 
                     <div>
                         <button class="main-button main-button-active" id="markButton" type="button">📚</button>
-                        <div id="advanced-button" class="advanced-button"><a>Advanced</a></div>
+                        <div id="advanced-button" class="advanced-button"><a>advanced</a></div>
                     </div>
 
-                    <div id="advanced-options" class="advanced-form-fields invisible">
+                    <div id="advanced-options" class="no-width">
 
+                        <!-- https://www.w3schools.com/howto/howto_js_autocomplete.asp -->
                         <div class="advanced-field-thingy advanced-oneline-form">
-                            <input placeholder="author" type="text" class="advanced-author">
-                            <input placeholder="title"  type="text" class="advanced-title">
+                            <div class="advanced-author"><input id="today-author" placeholder="author" type="text" ></div>
+                            <div class="advanced-title"><input id="today-title" placeholder="title"  type="text" ></div>
                         </div>
 
                         <div class="advanced-field-thingy textform-flex">
-                            <textarea placeholder=" notes" class="flex-full" maxlength="600"></textarea>
+                            <textarea id="today-notes" placeholder="    notes" class="flex-full" maxlength="600"></textarea>
                         </div>
 
-                        <div class="advanced-field-thingy">
-                            <div class="checkbox-container"><input type="checkbox">  finished reading</div>
+                        <br>
+
+                        <div id="advanced-blurb" class="blurb faded-blurb no-display">
+                            all fields optional and independent from each other
+                            <br>
+                            notes get saved and reset daily, book info persists
+                            <br>
+                            after clicking button, further changes autosave
                         </div>
 
                     </div>
@@ -111,80 +118,80 @@
     </div>
 </body>
 
+
+<script>
+
+    const reading_history = {{ history | safe }}.history
+
+</script>
+
 <script>
         
-        const baseUrl = "{{ api_url }}"
+        const baseApiUrl = "{{ api_url }}"
+        const baseUrl = "{{ route_url }}"
 
-        let token = localStorage.getItem('readertoken');
-        let user  = localStorage.getItem('readeruser');
-        document.querySelectorAll('.username').forEach((e) => {
-            e.innerText = user;
-        })
+        let token = "{{ api_token }}"
+        let user = "{{ username }}"
 
-        let clickedToday = false 
-        let count = 0
+        let count = parseInt("{{ streak }}")
+        let markedToday = "{{ today }}" === "True"
 
-        const remember = localStorage.getItem('remember');
-        if (!remember) {
-            sessionStorage.setItem('readertoken', token);
-            sessionStorage.setItem('readeruser', user);
-
-            localStorage.removeItem('readertoken');
-            localStorage.removeItem('readeruser');
-            localStorage.removeItem('remember');
-        }
+        const initNotes = "{{ note }}"
+        const initTitle = "{{ title }}"
+        const initAuthor = "{{ author }}"
 
         function logout() {
-            fetch(`${baseUrl}/logout?user=${user}`,  {
-            headers: {
-                'Authorization' : 'Bearer ' + token
-            },
-            method: 'GET',
-            mode: 'cors',
-            }).then((response) => {console.log("logged out")})
-            localStorage.removeItem('readertoken');
-            localStorage.removeItem('readeruser');
-
-            sessionStorage.removeItem('readertoken');
-            sessionStorage.removeItem('readeruser');
-
-            window.location.replace("/");
+            window.location.replace("/logout");    
         }
 
-        if (!token) {
-            window.location.replace("/login");
-        }
+        // if (!token) {
+        //     window.location.replace("/login");
+        // }
 
         let leaderboardVisible = false
         let aboutVisible = false
         let apiVisible = false
 
+        
+
+        function getDongle() {
+            return document.getElementById('dongle')
+        }
+
+        function switchSidebarMode(mode) {
+            toggleRemaining(mode)
+            const dongle = getDongle()
+            document.getElementById(`sidebar-${mode}`).classList.toggle("out-of-reach")
+            dongle.classList.toggle("out-of-reach")
+            dongle.classList.toggle(`dongle-${mode}`)
+        }
+
+        function toggleRemaining(mode) {
+            if (mode !== "leaderboard") {
+                if (leaderboardVisible) leaderboard()
+            }
+            if (mode !== "about") {
+                if (aboutVisible) showAbout()
+            }
+            if (mode !== "api") {
+                if (apiVisible) showApi()
+            }
+        }
+
 
         function showAbout() {
-            if (leaderboardVisible) leaderboard()
-            if (apiVisible) showApi()
+            switchSidebarMode("about")
             aboutVisible = !aboutVisible
-            document.getElementById('sidebar-about').classList.toggle("out-of-reach")
-            document.getElementById('dongle').classList.toggle("out-of-reach")
-            document.getElementById('dongle').classList.toggle("dongle-about")
         }
         
         function leaderboard() {
-            if (aboutVisible) showAbout()
-            if (apiVisible) showApi()
+            switchSidebarMode("leaderboard")
             leaderboardVisible = !leaderboardVisible
-            document.getElementById('sidebar-leaderboard').classList.toggle("out-of-reach")
-            document.getElementById('dongle').classList.toggle("out-of-reach")
-            document.getElementById('dongle').classList.toggle("dongle-leaderboard")
         }
 
         function showApi() {
-            if (aboutVisible) showAbout()
-            if (leaderboardVisible) leaderboard()
+            switchSidebarMode("api")
             apiVisible = !apiVisible
-            document.getElementById('sidebar-api').classList.toggle("out-of-reach")
-            document.getElementById('dongle').classList.toggle("out-of-reach")
-            document.getElementById('dongle').classList.toggle("dongle-api")
         }
 
         function hideAllSidebars() {
@@ -193,13 +200,19 @@
             if (apiVisible) showApi()
         }
 
-        function get_leaderboard() {
-            fetch(`${baseUrl}/leaderboard?type=all`,  {
+        function api_request(endpoint, method, body=undefined) {
+            return fetch(`${baseApiUrl}/${endpoint}`,  {
                 headers: {
-                    'Authorization' : 'Bearer ' + token
+                    'Authorization' : `Bearer ${token}`,
+                    'Content-Type' : 'application/json'
                 },
-                method: 'GET',
-                mode: 'cors',}).then((r) => {
+                method: method,
+                body: body ? JSON.stringify(body) : undefined,
+                mode: 'cors',})
+        }
+
+        function get_leaderboard() {
+            api_request("leaderboard?type=all", 'GET').then((r) => {
                     if (r.ok) {
                         r.json().then((j) => {
 
@@ -227,41 +240,25 @@
         }
         
         function get_streak() {
+            const streak = parseInt("{{ streak }}")
 
-            fetch(`${baseUrl}/today/verbose?user=${user}`,  {
-            headers: {
-                'Authorization' : 'Bearer ' + token
-            },
-            method: 'GET',
-            mode: 'cors',
-            }).then((response) => {
-            if (response.ok) {
-                response.json().then((res) => {
-                    count = res['streak']
-                    document.getElementById("streak").innerText = count
-                    const button = document.getElementById("markButton")
-                    const disabled = (res['today'])
+            document.getElementById("today-author").value = initAuthor
+            document.getElementById("today-title").value = initTitle
+            document.getElementById("today-notes").value = initNotes
 
-                    if (count > 7) {
-                        document.querySelectorAll('.fyah').forEach((e) => {
-                            e.classList.toggle('hidden')
-                        })
-                    }
-                    
+            const button = document.getElementById("markButton")
 
-                    if (disabled) {
-                        button.disabled = disabled
-                        button.classList.toggle('main-button-active')
-                        button.classList.toggle('main-button-marked')
-
-                        clickedToday = true
-                    }
-                    
-                })
-            } else {
-                document.getElementById("streak").innerText = -1
+            if (markedToday) {
+                button.disabled = false
+                button.classList.toggle('main-button-active')
+                button.classList.toggle('main-button-marked')
             }
-            }).catch((e) => console.log("error", e));
+
+            if (streak > 7) {
+                document.querySelectorAll('.fyah').forEach((e) => {
+                   e.classList.toggle('hidden')
+                })
+            }
         }
 
         Date.prototype.addDay = function() {
@@ -272,19 +269,9 @@
 
         function display_history() {
 
-            fetch(`${baseUrl}/history?user=${user}`,  {
-            headers: {
-                'Authorization' : 'Bearer ' + token
-            },
-            method: 'GET',
-            mode: 'cors',
-            }).then((response) => {
-            if (response.ok) {
-                response.json().then((res) => {
-                    const days = res.history
-                    console.log(res)
-            
-                const dayObjs = days.map((e) => {
+            const days = reading_history
+
+            const dayObjs = days.map((e) => {
                     const d = e.day.split('-')
                     return new Date(d[2],parseInt(d[1])-1,d[0])
                 }).sort((a,b) => {
@@ -304,32 +291,32 @@
                     }
                     currDate = currDate.addDay()
                     document.getElementById('history-display').appendChild(d)
-                }
-                    })
-            } else {
-                document.getElementById('history-display').innerHTML = "failed to load history :("
-            }
-            }).catch((e) => console.log("error", e))
-            
+                }   
         }
 
         let gettingStreak = false
+
+        function get_advanced_fields() {
+            const res = {
+                author: document.getElementById("today-author").value,
+                title: document.getElementById("today-title").value,
+                notes: document.getElementById("today-notes").value,
+            }
+            api_request("mark-with-token", 'POST', res).then((res) => {
+                console.log("today status updated")
+            })
+        }
+
+
+
         function mark_today() {
 
-            if (gettingStreak) {
-                console.log("fuck outta here with that double click")
-                return
-            }
+            // accounts for double clicks
+            if (gettingStreak) return
 
             gettingStreak = true
 
-            fetch(`${baseUrl}/mark-with-token`,  {
-            headers: {
-                'Authorization' : 'Bearer ' + token
-            },
-            method: 'POST',
-            mode: 'cors',
-            }).then((response) => {
+            api_request("mark-with-token", 'POST').then((response) => {
             if (response.ok) {
                 response.text().then((txt) => {
                     const button = document.getElementById("markButton")
@@ -337,6 +324,7 @@
                     document.getElementById("streak").innerText = count + 1
                     button.classList.toggle('main-button-active')
                     button.classList.toggle('main-button-marked')
+                    markedToday = true
                 })
             } else {
                 document.getElementById("streak").innerText = -1
@@ -348,22 +336,32 @@
         }
 
         let advanced_toggled = false
+
         function toggle_advanced() {
+            
+            const advanced_options = document.getElementById("advanced-options")
 
-            console.log(advanced_toggled)
-
-            setTimeout(() => document.getElementById("advanced-options").classList.toggle("invisible"), advanced_toggled ? 0 : 100);
-            setTimeout(() => document.getElementById("mark-container").classList.toggle("mark-advanced-container-extended"), advanced_toggled ? 0 : 0);
+            setTimeout(() => advanced_options.classList.toggle("invisible"), advanced_toggled ? 1000 : 0);
+            setTimeout(() => advanced_options.classList.toggle("full-width"), advanced_toggled ? 0 : 0);
+            setTimeout(() => advanced_options.classList.toggle("no-width"), advanced_toggled ? 0 : 0);
+            setTimeout(() => document.getElementById("mark-advanced-container").classList.toggle("gapped"), advanced_toggled ? 500 : 0);
+            
+            // fade
             setTimeout(() => document.querySelectorAll(".advanced-field-thingy").forEach((e) => {
                 e.classList.toggle("advanced-field-thingy-toggled")
-            }), 200)
+            }), advanced_toggled ? 0 : 500)
+
+            setTimeout(() => document.getElementById("advanced-blurb").classList.toggle("no-display"), advanced_toggled ? 0 : 500)
+            setTimeout(() => document.getElementById("advanced-blurb").classList.toggle("faded-blurb"), advanced_toggled ? 0 : 1000)
 
             advanced_toggled = !advanced_toggled
-        }
 
-        get_streak()
-        get_leaderboard()
-        display_history()
+            if (advanced_toggled) {
+                document.getElementById("advanced-button").innerHTML = "<a>simple</a>"
+            } else {
+                document.getElementById("advanced-button").innerHTML = "<a>advanced</a>"
+            }
+        }
 
         document.getElementById("main-stuff").addEventListener("click", () => {
             hideAllSidebars()
@@ -389,9 +387,28 @@
             logout()
         })
 
+
+        /* ADVANCED FIELDS */
+
         document.getElementById("advanced-button").addEventListener("click", () => {
             toggle_advanced()
         })
+
+        document.getElementById("today-author").addEventListener("change", () => {
+            get_advanced_fields()
+        })
+
+        document.getElementById("today-title").addEventListener("change", () => {
+            get_advanced_fields()
+        })
+
+        document.getElementById("today-notes").addEventListener("change", () => {
+            get_advanced_fields()
+        })
+
+        get_streak()
+        get_leaderboard()
+        display_history()
         
 </script>
 </html>
