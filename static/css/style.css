@@ -146,7 +146,7 @@ button {
     transition: all 1s;
 }
 
-.checkbox-container {
+/* .checkbox-container {
     background-color: #1b1b1b;
     width:fit-content;
     margin:auto;
@@ -154,7 +154,7 @@ button {
     padding-right: 10px;
     padding-top: 5px;
     border-radius: 10px;
-}
+} */
 
 #advanced-options {
     justify-content: left;
@@ -167,9 +167,29 @@ button {
     display: grid;
     grid-template-columns: [start] 40% [mid] auto [end];
     column-gap: 8px;
-    height: 6vh;
+    height: 4vh;
     transform: all 1s;
 }
+
+.advanced-checkbox {
+
+}
+
+.checkbox-label {
+    text-align: left;
+}
+
+.checkbox-container {
+    display: grid;
+    grid-template-columns: [start] 10% [mid] auto [end];
+    column-gap: 4px;
+    height: 1.2rem;
+}
+
+.inline {
+    display: inline-block;
+}
+
 .textform-flex {
     height: auto;
     display: flex;

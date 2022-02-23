@@ -92,6 +92,14 @@
                             <div class="advanced-title"><input id="today-title" placeholder="title"  type="text" ></div>
                         </div>
 
+                        <div class="advanced-field-thingy advanced-checkbox">
+                            <div class="checkbox-container">
+                                <input type="checkbox" id="today-finished"></input>
+                                <label class="checkbox-label" for="today-finished">finished</label>
+                            </div>
+                            
+                        </div>
+
                         <div class="advanced-field-thingy textform-flex">
                             <textarea id="today-notes" placeholder="    notes" class="flex-full" maxlength="600"></textarea>
                         </div>
@@ -136,17 +144,14 @@
         let count = parseInt("{{ streak }}")
         let markedToday = "{{ today }}" === "True"
 
-        const initNotes = "{{ note }}"
+        const initNotes = ["None", ""].includes("{{ note }}") ? null : "{{ note }}"
+
         const initTitle = "{{ title }}"
         const initAuthor = "{{ author }}"
 
         function logout() {
             window.location.replace("/logout");    
         }
-
-        // if (!token) {
-        //     window.location.replace("/login");
-        // }
 
         let leaderboardVisible = false
         let aboutVisible = false
@@ -296,15 +301,23 @@
 
         let gettingStreak = false
 
-        function get_advanced_fields() {
+        function post_advanced_fields() {
+
+            // only auto-update if today marked 
+            if (!markedToday) return
+
             const res = {
                 author: document.getElementById("today-author").value,
                 title: document.getElementById("today-title").value,
                 notes: document.getElementById("today-notes").value,
             }
-            api_request("mark-with-token", 'POST', res).then((res) => {
-                console.log("today status updated")
-            })
+
+            // only send request if at least one field is filled 
+            if (res.author || res.title || res.notes) {
+                api_request("mark-with-token", 'POST', res).then((res) => {
+                    console.log("today status updated")
+                })
+            }
         }
 
 
@@ -395,15 +408,15 @@
         })
 
         document.getElementById("today-author").addEventListener("change", () => {
-            get_advanced_fields()
+            post_advanced_fields()
         })
 
         document.getElementById("today-title").addEventListener("change", () => {
-            get_advanced_fields()
+            post_advanced_fields()
         })
 
         document.getElementById("today-notes").addEventListener("change", () => {
-            get_advanced_fields()
+            post_advanced_fields()
         })
 
         get_streak()

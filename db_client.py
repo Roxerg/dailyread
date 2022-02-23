@@ -5,7 +5,9 @@ import random
 
 from datetime import datetime
 
+
 import psycopg2
+import utils
 
 import os
 DB_URI = os.environ['DATABASE_URL']
@@ -64,16 +66,40 @@ def init_db():
         );
         '''
     ) 
+    
+    # cur.execute("DROP TABLE user_books")
+    # cur.execute("DROP TABLE books")
+    # cur.execute("DROP TABLE authors")
+    cur.execute(
+        '''
+        CREATE TABLE IF NOT EXISTS authors(
+            id SERIAL,
+            name VARCHAR UNIQUE,
+            PRIMARY KEY (id)
+        );
+    ''')
 
     cur.execute(
         '''
-        CREATE TABLE IF NOT EXISTS history(
-            book_id SERIAL,
-            author VARCHAR,
-            title VARCHAR, 
+        CREATE TABLE IF NOT EXISTS books(
+            id SERIAL,
+            author_id INT REFERENCES authors (id),
+            title VARCHAR NOT NULL, 
             pages VARCHAR,
             isbn VARCHAR(20),
-            PRIMARY KEY (day, user_id)
+            PRIMARY KEY (id)
+        );
+        '''
+    ) 
+
+    cur.execute(
+        '''
+        CREATE TABLE IF NOT EXISTS user_books (
+            book_id INT REFERENCES books (id),
+            user_id INT REFERENCES users (id),
+            page INT,
+            finished BOOLEAN,
+            PRIMARY KEY (book_id, user_id)
         );
         '''
     ) 
@@ -103,6 +129,30 @@ def init_db():
     cur.close()
     
 
+def add_author_if_new(cur, author_name):
+
+    author_name = utils.process_author(author_name)
+
+    cur.execute("INSERT INTO authors (name) VALUES (%s) ON CONFLICT (name) DO UPDATE SET name=EXCLUDED.name RETURNING id", [author_name])
+    res = cur.fetchone()
+
+    return res[0]
+
+def add_book_if_new(cur, book_title, author_id=None):
+
+    book_title = utils.process_title(title)
+
+    if author_id:
+        cur.execute("INSERT INTO books (title, author_id) VALUES (%s, %s) ON CONFLICT (title) DO UPDATE SET title=EXCLUDED.title, author_id=EXCLUDED.author_id RETURNING id", [book_title, author_id]) 
+    else:
+        cur.execute("INSERT INTO books (title) VALUES (%s) ON CONFLICT (title) DO UPDATE SET title=EXCLUDED.title RETURNING id", [book_title]) 
+    res = cur.fetchone()
+
+    return res[0]
+
+
+
+
 
 def mark_today(username, advanced_data=None):
     conn = get_connection()
@@ -127,8 +177,21 @@ def mark_today(username, advanced_data=None):
         note = advanced_data.get("notes")
         author = advanced_data.get("author")
         title = advanced_data.get("title")
+
+    author_id, book_id = None, None
+
+    # create / get if specified
+    if author:
+        author_id = add_author_if_new(cur, author)
+
+    if title:
+        book_id = add_book_if_new(cur, book_title, author_id)
+
+    # add relation 
+    if book_id:
+        cur.execute("INSERT INTO user_books (user_id, book_id) VALUES (%s, %s) ON CONFLICT DO NOTHING", [user_id, book_id])
     
-    cur.execute("INSERT INTO history (day, streak, user_id, note) VALUES (CURRENT_DATE, %s, %s, %s) ON CONFLICT (day, user_id) DO UPDATE SET note = excluded.note", [streak+1, user_id, note])
+    cur.execute("INSERT INTO history (day, streak, user_id, note, book_id) VALUES (CURRENT_DATE, %s, %s, %s, %s) ON CONFLICT (day, user_id) DO UPDATE SET note = excluded.note", [streak+1, user_id, note, book_id])
     conn.commit()
 
     cur.execute("SELECT streak, user_id, note FROM history JOIN users ON user_id=id WHERE username=%s AND day=CURRENT_DATE-1;", [username])
@@ -148,17 +211,19 @@ def get_today(username):
     conn = get_connection()
     cur = conn.cursor()
 
-    cur.execute("SELECT streak, day, note FROM history JOIN users ON user_id=id WHERE username=%s AND day >= CURRENT_DATE - INTEGER '1' ORDER BY day DESC", [username])
+    cur.execute("SELECT streak, day, note, day=CURRENT_DATE as current_day  FROM history JOIN users ON user_id=id WHERE username=%s AND day >= CURRENT_DATE - INTEGER '1' ORDER BY day DESC", [username])
     res = cur.fetchone()
 
     cur.close()
+
+    print(res)
     
 
     if res != None:
         return {
             "streak": res[0],
             "today" : datetime.today().strftime('%Y-%m-%d') == res[1].strftime('%Y-%m-%d'),
-            "note" : res[2],
+            "note" : res[2] if res[3] else None,
         }
     else: 
         return None
